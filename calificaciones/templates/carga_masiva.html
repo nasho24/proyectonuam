@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Carga Masiva - NUAM Capital{% endblock %}
+
+{% block page_title %}Carga Masiva de Datos{% endblock %}
+{% block page_subtitle %}Importación de calificaciones desde archivos externos{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Panel de Carga -->
+        <div class="nuam-card">
+            <div class="nuam-card-header">
+                <h3>⬆️ Proceso de Carga</h3>
+            </div>
+            <div class="nuam-card-body">
+                <form method="post" enctype="multipart/form-data" class="form-nuam">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label class="form-label">Seleccionar Archivo *</label>
+                        <input type="file" class="form-control" name="archivo" 
+                               accept=".csv, .xlsx, .xls" required>
+                        <small class="form-text text-muted">
+                            Formatos soportados: CSV, Excel (.xlsx, .xls). Tamaño máximo: 10MB
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Tipo de Carga *</label>
+                        <select class="form-control" name="tipo_carga" required>
+                            <option value="">Seleccione el tipo de carga...</option>
+                            <option value="MONTOS">📊 Carga de Montos (DJ1948)</option>
+                            <option value="FACTORES">📈 Carga de Factores Calculados</option>
+                        </select>
+                    </div>
+
+                    <div class="alert-nuam alert-warning">
+                        <strong>⚠️ Consideraciones Importantes:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Verifique el formato del archivo antes de cargar</li>
+                            <li>Las fechas deben estar en formato YYYY-MM-DD</li>
+                            <li>Los valores decimales deben usar punto (.)</li>
+                            <li>Se validarán automáticamente los factores 8-16</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'calificaciones:mantenedor' %}" class="btn btn-nuam-outline">
+                            ← Volver al Mantenedor
+                        </a>
+                        <button type="submit" class="btn btn-nuam-primary">
+                            🚀 Iniciar Procesamiento
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+<!-- Sección de Plantillas Corporativas -->
+<div class="nuam-card">
+    <div class="nuam-card-header">
+        <h3>📋 Plantillas Oficiales de Carga</h3>
+    </div>
+    <div class="nuam-card-body">
+        <div class="row">
+            <!-- Plantilla Montos -->
+            <div class="col-lg-6 mb-4">
+                <div class="card border-primary h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file-invoice-dollar me-2"></i>
+                            Plantilla Montos DJ1948
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="text-primary">Formulario Declaración Jurada</h6>
+                        <p class="card-text small">
+                            Utilice esta plantilla para cargar montos brutos según 
+                            el formulario DJ1948 del SII. El sistema calculará 
+                            automáticamente los factores correspondientes.
+                        </p>
+                        
+                        <div class="mb-3">
+                            <strong class="d-block mb-2">Estructura Incluida:</strong>
+                            <ul class="small list-unstyled">
+                                <li>✅ Campos obligatorios marcados</li>
+                                <li>✅ Ejemplos prácticos incluidos</li>
+                                <li>✅ Validaciones integradas</li>
+                                <li>✅ Formato SII compatible</li>
+                            </ul>
+                        </div>
+                        
+                        <a href="{% url 'calificaciones:descargar_plantilla_montos' %}" 
+                           class="btn btn-primary w-100">
+                            <i class="fas fa-download me-2"></i>
+                            Descargar Plantilla Montos
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Plantilla Factores -->
+            <div class="col-lg-6 mb-4">
+                <div class="card border-success h-100">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calculator me-2"></i>
+                            Plantilla Factores Calculados
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="text-success">Factores Tributarios</h6>
+                        <p class="card-text small">
+                            Use esta plantilla cuando ya disponga de los factores 
+                            calculados. Incluye validación automática de la suma 
+                            de factores 8-16.
+                        </p>
+                        
+                        <div class="mb-3">
+                            <strong class="d-block mb-2">Características:</strong>
+                            <ul class="small list-unstyled">
+                                <li>✅ Validación suma factores 8-16 ≤ 1.0</li>
+                                <li>✅ Formato 8 decimales</li>
+                                <li>✅ Nomenclatura oficial SII</li>
+                                <li>✅ Ejemplos válidos incluidos</li>
+                            </ul>
+                        </div>
+                        
+                        <a href="{% url 'calificaciones:descargar_plantilla_factores' %}" 
+                           class="btn btn-success w-100">
+                            <i class="fas fa-download me-2"></i>
+                            Descargar Plantilla Factores
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información Técnica -->
+        <div class="alert alert-nuam mt-4">
+            <div class="d-flex">
+                <div class="me-3">
+                    <i class="fas fa-info-circle fa-2x text-primary"></i>
+                </div>
+                <div>
+                    <h6 class="alert-heading">Información Técnica Importante</h6>
+                    <ul class="mb-0 small">
+                        <li><strong>Formato Fechas:</strong> YYYY-MM-DD (2024-12-31)</li>
+                        <li><strong>Decimales:</strong> Use punto (.) como separador</li>
+                        <li><strong>Validación:</strong> Σ(factor_8 a factor_16) ≤ 1.00000000</li>
+                        <li><strong>Codificación:</strong> Archivos deben estar en UTF-8</li>
+                        <li><strong>Soporte:</strong> sistema@nuamcapital.cl</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+        <!-- Información Adicional -->
+        <div class="alert alert-info mt-3">
+            <h6>💡 Información Importante:</h6>
+            <ul class="mb-0 small">
+                <li>Las fechas deben estar en formato <strong>YYYY-MM-DD</strong></li>
+                <li>Los valores decimales usan <strong>punto (.)</strong> como separador</li>
+                <li>La suma de los <strong>factores 8-16 no debe superar 1.0</strong></li>
+                <li>El sistema validará automáticamente el formato</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <!-- Panel de Estado -->
+        <div class="nuam-card">
+            <div class="nuam-card-header">
+                <h3>📊 Estado del Sistema</h3>
+            </div>
+            <div class="nuam-card-body text-center">
+                <span style="font-size: 3rem;">✅</span>
+                <h5 class="text-nuam-dark mt-2">Sistema Listo</h5>
+                <p class="text-muted small">El sistema está preparado para procesar archivos de carga masiva.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

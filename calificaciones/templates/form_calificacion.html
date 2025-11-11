@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ titulo }} - NUAM Capital{% endblock %}
+
+{% block page_title %}{{ titulo }}{% endblock %}
+{% block page_subtitle %}Complete la información de la calificación tributaria{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="nuam-card">
+            <div class="nuam-card-header">
+                <h3>📝 Formulario de Calificación Tributaria</h3>
+            </div>
+            <div class="nuam-card-body">
+                <form method="post" class="form-nuam">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4 class="text-nuam-dark mb-4">Información Básica</h4>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Empresa *</label>
+                                <select name="empresa" class="form-control" required>
+                                    <option value="">Seleccione una empresa...</option>
+                                    {% for empresa in empresas %}
+                                    <option value="{{ empresa.id }}">{{ empresa.nombre }} - {{ empresa.rut }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Ejercicio Fiscal *</label>
+                                <input type="number" name="ejercicio" class="form-control" 
+                                       placeholder="2024" min="2000" max="2030" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Mercado *</label>
+                                <input type="text" name="mercado" class="form-control" 
+                                       placeholder="ACN, CFI, FONDOS" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Instrumento *</label>
+                                <input type="text" name="instrumento" class="form-control" 
+                                       placeholder="Nombre del instrumento" required>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h4 class="text-nuam-dark mb-4">Detalles Técnicos</h4>
+
+                            <div class="form-group">
+                                <label class="form-label">Fecha de Pago *</label>
+                                <input type="date" name="fecha_pago" class="form-control" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Secuencia de Evento *</label>
+                                <input type="number" name="secuencia_evento" class="form-control" 
+                                       placeholder="10001" min="10000" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Tipo de Sociedad</label>
+                                <select name="tipo_sociedad" class="form-control">
+                                    <option value="">Seleccione tipo...</option>
+                                    <option value="A">A - Abierta</option>
+                                    <option value="C">C - Cerrada</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Valor Histórico</label>
+                                <input type="number" name="valor_historico" class="form-control" 
+                                       placeholder="0.00" step="0.01" min="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label class="form-label">Descripción del Dividendo</label>
+                                <textarea name="descripcion_dividendo" class="form-control" rows="3"
+                                          placeholder="Descripción detallada del dividendo o evento"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-2">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Origen de la Información *</label>
+                                <select name="origen" class="form-control" required>
+                                    <option value="">Seleccione origen...</option>
+                                    <option value="CORREDOR">Corredor</option>
+                                    <option value="SISTEMA">Sistema</option>
+                                    <option value="CARGA_MASIVA">Carga Masiva</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div class="form-check mt-4">
+                                    <input type="checkbox" name="acogido_isfut" class="form-check-input" id="acogido_isfut">
+                                    <label class="form-check-label" for="acogido_isfut">
+                                        Acogido a ISFUT/ISIFT
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-top pt-4 mt-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'calificaciones:mantenedor' %}" class="btn btn-nuam-outline">
+                                ← Cancelar y Volver
+                            </a>
+                            <button type="submit" class="btn btn-nuam-primary">
+                                💾 Guardar Calificación
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Panel Informativo -->
+        <div class="nuam-card mt-4">
+            <div class="nuam-card-header">
+                <h3>ℹ️ Información Relevante</h3>
+            </div>
+            <div class="nuam-card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="text-nuam-dark">Campos Obligatorios</h5>
+                        <ul class="small text-muted">
+                            <li>Empresa asociada</li>
+                            <li>Ejercicio fiscal</li>
+                            <li>Mercado e instrumento</li>
+                            <li>Fecha de pago</li>
+                            <li>Secuencia de evento (≥ 10,000)</li>
+                            <li>Origen de la información</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="text-nuam-dark">Validaciones</h5>
+                        <ul class="small text-muted">
+                            <li>Secuencia mayor a 10,000</li>
+                            <li>Fecha en formato correcto</li>
+                            <li>Valores numéricos válidos</li>
+                            <li>Factores 8-16 suma ≤ 1</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Verificar si estamos en modo edición mirando si existe el título
+        var titulo = document.querySelector('.page-title').textContent;
+        if (titulo.includes('Modificar')) {
+            // Estamos en modo edición - los datos se prellenarán automáticamente
+            // desde el contexto de Django
+            console.log('Modo edición detectado');
+        }
+        
+        // Agregar validaciones adicionales
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            const secuencia = document.querySelector('input[name="secuencia_evento"]').value;
+            if (secuencia < 10000) {
+                e.preventDefault();
+                alert('La secuencia de evento debe ser mayor o igual a 10000');
+                return false;
+            }
+        });
+    });
+</script>
+{% endblock %}

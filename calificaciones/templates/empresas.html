@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestión de Empresas - NUAM Capital{% endblock %}
+
+{% block page_title %}Directorio Corporativo de Empresas{% endblock %}
+{% block page_subtitle %}Administración centralizada de empresas asociadas{% endblock %}
+{% block content %}
+
+<!-- Estadísticas -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ empresas.count }}</div>
+        <div class="stat-label">Empresas Registradas</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ empresas.count }}</div>
+        <div class="stat-label">Empresas Activas</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">100%</div>
+        <div class="stat-label">Cumplimiento</div>
+    </div>
+</div>
+
+<!-- Header de Acciones -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="text-nuam-dark">Listado de Empresas</h3>
+    <a href="{% url 'calificaciones:agregar_empresa' %}" class="btn btn-nuam-primary">
+        <span>➕</span> Nueva Empresa
+    </a>
+</div>
+
+<!-- Tabla de Empresas -->
+<div class="nuam-card">
+    <div class="nuam-card-header">
+        <h3>🏢 Directorio Corporativo</h3>
+    </div>
+    <div class="nuam-card-body">
+        {% if empresas %}
+        <div class="table-container">
+            <table class="table table-nuam">
+                <thead>
+                    <tr>
+                        <th>Información Fiscal</th>
+                        <th>Datos Corporativos</th>
+                        <th>Información de Contacto</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for empresa in empresas %}
+                    <tr>
+                        <td>
+                            <strong class="text-nuam-dark">{{ empresa.rut }}</strong>
+                            <br>
+                            <small class="text-muted">RUT Empresa</small>
+                        </td>
+                        <td>
+                            <strong>{{ empresa.nombre }}</strong>
+                            <br>
+                            <small class="text-muted">{{ empresa.giro|default:"Sin giro registrado" }}</small>
+                        </td>
+                        <td>
+                            {% if empresa.telefono %}
+                            <div class="mb-1">
+                                <strong>📞 Teléfono:</strong>
+                                <br>
+                                <small>{{ empresa.telefono }}</small>
+                            </div>
+                            {% endif %}
+                            {% if empresa.email %}
+                            <div>
+                                <strong>📧 Email:</strong>
+                                <br>
+                                <small>{{ empresa.email }}</small>
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge-nuam badge-success">Activa</span>
+                            <br>
+                            <small class="text-muted">Registrada</small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <span style="font-size: 4rem;">🏢</span>
+            </div>
+            <h4 class="text-nuam-dark mb-3">No hay empresas registradas</h4>
+            <p class="text-muted mb-4">Comience registrando la primera empresa en el sistema.</p>
+            <a href="{% url 'calificaciones:agregar_empresa' %}" class="btn btn-nuam-primary btn-lg">
+                ➕ Registrar Primera Empresa
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Acciones Adicionales -->
+<div class="quick-actions">
+    <a href="{% url 'calificaciones:agregar_empresa' %}" class="action-card">
+        <span class="action-icon">➕</span>
+        <h4>Nueva Empresa</h4>
+        <p class="text-muted">Registrar nueva empresa en el sistema</p>
+    </a>
+    <a href="{% url 'calificaciones:mantenedor' %}" class="action-card">
+        <span class="action-icon">📊</span>
+        <h4>Calificaciones</h4>
+        <p class="text-muted">Volver al mantenedor principal</p>
+    </a>
+    <!-- ELIMINADO: Administración avanzada -->
+</div>
+{% endblock %}

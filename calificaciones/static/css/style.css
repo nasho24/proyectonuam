@@ -1,0 +1,586 @@
+/* ===== VARIABLES CORPORATIVAS ===== */
+:root {
+    --nuam-primary: #1a365d;
+    --nuam-secondary: #2d3748;
+    --nuam-accent: #3182ce;
+    --nuam-success: #38a169;
+    --nuam-warning: #d69e2e;
+    --nuam-danger: #e53e3e;
+    --nuam-light: #f7fafc;
+    --nuam-dark: #2d3748;
+    --nuam-border: #e2e8f0;
+    --nuam-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* ===== ESTILOS GENERALES ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f8fafc;
+    color: #2d3748;
+    line-height: 1.6;
+}
+
+.nuam-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ===== NAVBAR CORPORATIVA ===== */
+.nuam-navbar {
+    background: linear-gradient(135deg, var(--nuam-primary) 0%, #2c5282 100%);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 1rem 0;
+    border-bottom: 3px solid var(--nuam-accent);
+}
+
+.nuam-brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white !important;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nuam-brand::before {
+    content: "📊";
+    font-size: 1.8rem;
+}
+
+.nav-link {
+    color: #e2e8f0 !important;
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    margin: 0 0.25rem;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white !important;
+    transform: translateY(-1px);
+}
+
+/* ===== HEADER DE PÁGINA ===== */
+.page-header {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    padding: 2.5rem 0;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--nuam-border);
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--nuam-primary);
+    margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+    font-size: 1.1rem;
+    color: #718096;
+    font-weight: 400;
+}
+
+/* ===== TARJETAS CORPORATIVAS ===== */
+.nuam-card {
+    background: white;
+    border: 1px solid var(--nuam-border);
+    border-radius: 12px;
+    box-shadow: var(--nuam-shadow);
+    margin-bottom: 2rem;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.nuam-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+}
+
+.nuam-card-header {
+    background: linear-gradient(135deg, var(--nuam-primary), var(--nuam-secondary));
+    color: white;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--nuam-border);
+}
+
+.nuam-card-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nuam-card-body {
+    padding: 2rem;
+}
+
+/* ===== BOTONES CORPORATIVOS ===== */
+.btn-nuam-primary {
+    background: linear-gradient(135deg, var(--nuam-primary), var(--nuam-accent));
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(49, 130, 206, 0.2);
+}
+
+.btn-nuam-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(49, 130, 206, 0.3);
+    color: white;
+}
+
+.btn-nuam-outline {
+    background: transparent;
+    border: 2px solid var(--nuam-primary);
+    color: var(--nuam-primary);
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-nuam-outline:hover {
+    background: var(--nuam-primary);
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* ===== TABLAS CORPORATIVAS ===== */
+.table-nuam {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.table-nuam thead {
+    background: linear-gradient(135deg, var(--nuam-primary), var(--nuam-secondary));
+}
+
+.table-nuam th {
+    color: white;
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+    text-align: left;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.table-nuam td {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--nuam-border);
+    vertical-align: middle;
+}
+
+.table-nuam tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.table-nuam tbody tr:hover {
+    background-color: #f7fafc;
+}
+
+/* ===== BADGES ===== */
+.badge-nuam {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.badge-primary {
+    background: var(--nuam-accent);
+    color: white;
+}
+
+.badge-success {
+    background: var(--nuam-success);
+    color: white;
+}
+
+.badge-warning {
+    background: var(--nuam-warning);
+    color: white;
+}
+
+/* ===== FORMULARIOS CORPORATIVOS ===== */
+.form-nuam {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: var(--nuam-shadow);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    font-weight: 600;
+    color: var(--nuam-dark);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--nuam-border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--nuam-accent);
+    box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+}
+
+/* ===== GRID DE ESTADÍSTICAS ===== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: var(--nuam-shadow);
+    text-align: center;
+    border-left: 4px solid var(--nuam-accent);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--nuam-primary);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: #718096;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.8rem;
+}
+
+/* ===== ACCIONES RÁPIDAS ===== */
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.action-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+    border: 1px solid var(--nuam-border);
+    text-align: center;
+}
+
+.action-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+    color: inherit;
+    border-color: var(--nuam-accent);
+}
+
+.action-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .nuam-container {
+        padding: 0 15px;
+    }
+    
+    .page-header {
+        padding: 1.5rem 0;
+    }
+    
+    .page-title {
+        font-size: 1.5rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+    }
+}
+
+/* ===== ESTADOS DE ALERTA ===== */
+.alert-nuam {
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid;
+    margin-bottom: 1.5rem;
+}
+
+.alert-success {
+    background: #f0fff4;
+    border-color: var(--nuam-success);
+    color: #22543d;
+}
+
+.alert-warning {
+    background: #fffaf0;
+    border-color: var(--nuam-warning);
+    color: #744210;
+}
+
+.alert-danger {
+    background: #fff5f5;
+    border-color: var(--nuam-danger);
+    color: #742a2a;
+}
+/* ===== MEJORAS ESPECÍFICAS ===== */
+.text-nuam-dark {
+    color: var(--nuam-dark) !important;
+}
+
+.text-nuam-accent {
+    color: var(--nuam-accent) !important;
+}
+
+.bg-nuam-primary {
+    background: var(--nuam-primary) !important;
+}
+
+/* Mejoras para formularios específicos */
+.form-check-input {
+    width: 1.2em;
+    height: 1.2em;
+    margin-top: 0.15em;
+}
+
+.form-check-label {
+    margin-left: 0.5em;
+    font-weight: 500;
+}
+
+/* Estados de botones */
+.btn-danger {
+    background: linear-gradient(135deg, var(--nuam-danger), #c53030);
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #c53030, #9b2c2c);
+    transform: translateY(-2px);
+    color: white;
+}
+
+/* Mejoras para tablas */
+.table-container {
+    overflow-x: auto;
+    border-radius: 8px;
+}
+
+/* Estados de hover mejorados */
+.nuam-card-header.bg-danger {
+    background: linear-gradient(135deg, var(--nuam-danger), #c53030) !important;
+}
+
+/* Responsive mejoras */
+@media (max-width: 576px) {
+    .nuam-card-body {
+        padding: 1.5rem;
+    }
+    
+    .page-title {
+        font-size: 1.75rem;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+
+/* Estilos para las tarjetas de plantillas */
+.card-border-primary {
+    border-left: 4px solid var(--nuam-primary) !important;
+}
+
+.card-border-success {
+    border-left: 4px solid var(--nuam-success) !important;
+}
+
+.alert-nuam {
+    background: #f8f9fa;
+    border: 1px solid var(--nuam-border);
+    border-left: 4px solid var(--nuam-accent);
+}
+
+.list-unstyled li {
+    padding: 0.25rem 0;
+}
+
+.list-unstyled li:before {
+    content: "•";
+    color: var(--nuam-accent);
+    font-weight: bold;
+    display: inline-block;
+    width: 1em;
+    margin-left: -1em;
+}
+
+/* Estilo para enlace activo en navbar */
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.brand-icon {
+    margin-right: 0.5rem;
+    font-size: 1.2em;
+}
+
+/* ===== ESTILOS PARA LOGO EN NAVBAR ===== */
+.nuam-brand {
+    display: flex !important;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: white !important;
+    text-decoration: none;
+    margin-right: 2rem;
+}
+
+.brand-logo {
+    height: 35px;
+    width: auto;
+    filter: brightness(0) invert(1); /* Hace el logo blanco */
+}
+
+.brand-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* ===== HEADER SIN LOGO ===== */
+.page-header-content {
+    text-align: center;
+}
+
+.page-title-content {
+    text-align: center;
+}
+
+.page-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--nuam-primary);
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+}
+
+.page-subtitle {
+    font-size: 1.1rem;
+    color: #718096;
+    font-weight: 400;
+    margin: 0;
+}
+
+/* ===== ELIMINAR LOGO DE TARJETAS ===== */
+.nuam-card-header h3::before {
+    display: none; /* Elimina el logo de los headers de tarjetas */
+}
+
+/* ===== NAVBAR ALINEACIÓN ===== */
+.nuam-navbar .nuam-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.navbar-nav {
+    display: flex;
+    align-items: center;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 1.8rem;
+    }
+    
+    .brand-logo {
+        height: 28px;
+    }
+    
+    .nuam-brand {
+        font-size: 1.2rem;
+        margin-right: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .nuam-brand .brand-text {
+        display: none; /* Oculta texto en móviles muy pequeños */
+    }
+    
+    .brand-logo {
+        height: 32px;
+    }
+    
+    .page-title {
+        font-size: 1.6rem;
+    }
+}

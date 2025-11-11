@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Confirmar Eliminación - NUAM Capital{% endblock %}
+
+{% block page_title %}Confirmación de Eliminación{% endblock %}
+{% block page_subtitle %}Proceso de eliminación segura de registros{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="nuam-card">
+            <div class="nuam-card-header bg-danger text-white">
+                <h3 class="mb-0">⚠️ Confirmar Eliminación</h3>
+            </div>
+            <div class="nuam-card-body text-center py-5">
+                <!-- Icono de Advertencia -->
+                <div class="mb-4">
+                    <span style="font-size: 4rem;" class="text-danger">🗑️</span>
+                </div>
+                
+                <!-- Mensaje Principal -->
+                <h4 class="text-danger mb-3">Eliminación de Registro</h4>
+                <p class="text-muted mb-4">
+                    Está a punto de eliminar permanentemente un registro del sistema. 
+                    Esta acción no se puede deshacer.
+                </p>
+
+                <!-- Información del Registro -->
+                <div class="alert alert-danger text-start">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong class="d-block">{{ calificacion.instrumento }}</strong>
+                            <small class="text-muted">
+                                Ejercicio: {{ calificacion.ejercicio }} | 
+                                Mercado: {{ calificacion.mercado }}<br>
+                                Fecha: {{ calificacion.fecha_pago|date:"d/m/Y" }} | 
+                                Origen: {{ calificacion.get_origen_display }}
+                            </small>
+                        </div>
+                        <span class="badge-nuam badge-danger">ELIMINAR</span>
+                    </div>
+                </div>
+
+                <!-- Información Adicional -->
+                <div class="alert alert-warning text-start small">
+                    <strong>📋 Información Adicional:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Esta acción eliminará permanentemente el registro</li>
+                        <li>No podrá recuperar la información eliminada</li>
+                        <li>Se registrará la acción en el log del sistema</li>
+                        <li>Afectará reportes y estadísticas asociadas</li>
+                    </ul>
+                </div>
+
+                <!-- Formulario de Confirmación -->
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-center gap-3 mt-4">
+                        <a href="{% url 'calificaciones:mantenedor' %}" class="btn btn-nuam-outline btn-lg">
+                            ← Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            🗑️ Confirmar Eliminación
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Enlace de Seguridad -->
+                <div class="mt-4">
+                    <small class="text-muted">
+                        Si no está seguro, recomendamos 
+                        <a href="{% url 'calificaciones:mantenedor' %}" class="text-nuam-accent">cancelar esta acción</a> 
+                        y revisar la información.
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de Alternativas -->
+        <div class="nuam-card mt-4">
+            <div class="nuam-card-header">
+                <h3>💡 Alternativas Recomendadas</h3>
+            </div>
+            <div class="nuam-card-body">
+                <div class="row text-center">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <span style="font-size: 2rem;">✏️</span>
+                        </div>
+                        <h6>Editar Registro</h6>
+                        <p class="small text-muted">
+                            Modifique la información en lugar de eliminar
+                        </p>
+                        <a href="{% url 'calificaciones:modificar' calificacion.id %}" class="btn btn-nuam-outline btn-sm">
+                            Ir a Edición
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <span style="font-size: 2rem;">📊</span>
+                        </div>
+                        <h6>Volver al Listado</h6>
+                        <p class="small text-muted">
+                            Regresar al mantenedor principal
+                        </p>
+                        <a href="{% url 'calificaciones:mantenedor' %}" class="btn btn-nuam-outline btn-sm">
+                            Ver Calificaciones
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

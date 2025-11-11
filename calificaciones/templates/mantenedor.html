@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Calificaciones Tributarias - NUAM Capital{% endblock %}
+
+{% block page_title %}Mantenedor de Calificaciones Tributarias{% endblock %}
+{% block page_subtitle %}Gestión integral y control de calificaciones fiscales{% endblock %}
+
+{% block content %}
+<!-- Estadísticas Principales -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ calificaciones.count }}</div>
+        <div class="stat-label">Total Calificaciones</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ calificaciones.count }}</div>
+        <div class="stat-label">Registros Activos</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">2024</div>
+        <div class="stat-label">Ejercicio Vigente</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">100%</div>
+        <div class="stat-label">Cumplimiento</div>
+    </div>
+</div>
+
+<!-- Panel de Filtros -->
+<div class="nuam-card">
+    <div class="nuam-card-header">
+        <h3>🔍 Filtros de Búsqueda</h3>
+    </div>
+    <div class="nuam-card-body">
+        <form method="get" class="row g-4">
+            <div class="col-md-3">
+                <label class="form-label">Ejercicio Fiscal</label>
+                <input type="number" name="ejercicio" class="form-control" placeholder="2024" value="{{ request.GET.ejercicio }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Mercado</label>
+                <input type="text" name="mercado" class="form-control" placeholder="ACN, CFI, etc." value="{{ request.GET.mercado }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Instrumento</label>
+                <input type="text" name="instrumento" class="form-control" placeholder="Nombre del instrumento" value="{{ request.GET.instrumento }}">
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-nuam-primary w-100">Aplicar Filtros</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Panel de Acciones -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="text-nuam-dark">Registros de Calificaciones</h3>
+    <div class="d-flex gap-2">
+        <a href="{% url 'calificaciones:ingresar' %}" class="btn btn-nuam-primary">
+            <span>➕</span> Nueva Calificación
+        </a>
+        <a href="{% url 'calificaciones:carga_masiva' %}" class="btn btn-nuam-outline">
+            <span>📁</span> Carga Masiva
+        </a>
+    </div>
+</div>
+
+<!-- Tabla de Calificaciones -->
+<div class="nuam-card">
+    <div class="nuam-card-header">
+        <h3>📋 Registros de Calificaciones Tributarias</h3>
+    </div>
+    <div class="nuam-card-body">
+        {% if calificaciones %}
+        <div class="table-container">
+            <table class="table table-nuam">
+                <thead>
+                    <tr>
+                        <th>Instrumento</th>
+                        <th>Ejercicio</th>
+                        <th>Mercado</th>
+                        <th>Fecha de Pago</th>
+                        <th>Origen</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for calif in calificaciones %}
+                    <tr>
+                        <td>
+                            <strong class="text-nuam-dark">{{ calif.instrumento }}</strong>
+                            {% if calif.descripcion_dividendo %}
+                            <br><small class="text-muted">{{ calif.descripcion_dividendo|truncatewords:4 }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge-nuam badge-primary">{{ calif.ejercicio }}</span>
+                        </td>
+                        <td>{{ calif.mercado }}</td>
+                        <td>{{ calif.fecha_pago|date:"d/m/Y" }}</td>
+                        <td>
+                            <span class="badge-nuam {% if calif.origen == 'CORREDOR' %}badge-warning{% else %}badge-success{% endif %}">
+                                {{ calif.get_origen_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge-nuam badge-success">Activo</span>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a href="{% url 'calificaciones:modificar' calif.id %}" class="btn btn-sm btn-nuam-outline" title="Editar">
+                                    Editar
+                                </a>
+                                <a href="{% url 'calificaciones:eliminar' calif.id %}" class="btn btn-sm btn-danger" title="Eliminar">
+                                    Eliminar
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <span style="font-size: 4rem;">📊</span>
+            </div>
+            <h4 class="text-nuam-dark mb-3">No se encontraron calificaciones</h4>
+            <p class="text-muted mb-4">No hay registros de calificaciones tributarias en el sistema.</p>
+            <a href="{% url 'calificaciones:ingresar' %}" class="btn btn-nuam-primary btn-lg">
+                ➕ Registrar Primera Calificación
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Acciones Rápidas -->
+<div class="quick-actions">
+    <a href="{% url 'calificaciones:carga_masiva' %}" class="action-card">
+        <span class="action-icon">📁</span>
+        <h4>Carga Masiva</h4>
+        <p class="text-muted">Importar registros desde archivos CSV</p>
+    </a>
+    <a href="{% url 'calificaciones:empresas' %}" class="action-card">
+        <span class="action-icon">🏢</span>
+        <h4>Gestión de Empresas</h4>
+        <p class="text-muted">Administrar empresas asociadas</p>
+    </a>
+    <!-- ELIMINADO: Panel Administrativo -->
+</div>
+{% endblock %}
