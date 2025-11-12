@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Panel General - NUAM{% endblock %}
+
+{% block content %}
+<div class="nuam-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-content">
+            <h1 class="page-title">
+                <i class="bi bi-speedometer2"></i> Panel General NUAM
+            </h1>
+            <p class="page-subtitle">Sistema Integral de Gestión Tributaria</p>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ total_empresas }}</div>
+            <div class="stat-label">Empresas Registradas</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ total_calificaciones }}</div>
+            <div class="stat-label">Calificaciones Totales</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ usuarios_activos }}</div>
+            <div class="stat-label">Usuarios Activos</div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <a href="{% url 'calificaciones:mantenedor' %}" class="action-card">
+            <div class="action-icon">
+                <i class="bi bi-list-check"></i>
+            </div>
+            <h5>Mantenedor</h5>
+            <p class="text-muted small">Gestionar calificaciones</p>
+        </a>
+        <a href="{% url 'calificaciones:empresas' %}" class="action-card">
+            <div class="action-icon">
+                <i class="bi bi-building"></i>
+            </div>
+            <h5>Empresas</h5>
+            <p class="text-muted small">Administrar empresas</p>
+        </a>
+        <a href="{% url 'calificaciones:carga_masiva' %}" class="action-card">
+            <div class="action-icon">
+                <i class="bi bi-upload"></i>
+            </div>
+            <h5>Carga Masiva</h5>
+            <p class="text-muted small">Importar datos</p>
+        </a>
+    </div>
+
+    <!-- Validación de Factores -->
+    <div class="nuam-card">
+        <div class="nuam-card-header">
+            <h3><i class="bi bi-calculator"></i> Validación de Factores Tributarios</h3>
+        </div>
+        <div class="nuam-card-body">
+            <form id="formFactores">
+                <div class="row g-3">
+                    {% for factor in factores_range %}
+                    <div class="col-md-2">
+                        <label for="factor_{{factor}}" class="form-label small">Factor {{factor}}</label>
+                        <input type="number" step="0.00000001" min="0" max="1" 
+                               class="form-control factor-input" 
+                               id="factor_{{factor}}" 
+                               name="factor_{{factor}}"
+                               placeholder="0.00000000">
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="button" id="btnValidar" class="btn btn-nuam-primary mt-3">
+                    <i class="bi bi-check2-circle"></i> Validar suma
+                </button>
+            </form>
+
+            <div id="resultado" class="mt-3 fw-semibold"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/main.js' %}"></script>
+<script src="{% static 'js/calculos.js' %}"></script>
+<script>
+// Script de validación de factores
+document.getElementById('btnValidar').addEventListener('click', function() {
+    const inputs = document.querySelectorAll('.factor-input');
+    let suma = 0;
+    let todosValidos = true;
+    
+    inputs.forEach(input => {
+        const valor = parseFloat(input.value) || 0;
+        suma += valor;
+        
+        if (valor < 0 || valor > 1) {
+            todosValidos = false;
+            input.classList.add('is-invalid');
+        } else {
+            input.classList.remove('is-invalid');
+        }
+    });
+    
+    const resultado = document.getElementById('resultado');
+    const sumaRedondeada = parseFloat(suma.toFixed(8));
+    
+    if (!todosValidos) {
+        resultado.innerHTML = '<div class="alert-nuam alert-danger">❌ Error: Los factores deben estar entre 0 y 1</div>';
+    } else if (sumaRedondeada > 1.00000001) {
+        resultado.innerHTML = `<div class="alert-nuam alert-danger">❌ Suma inválida: ${sumaRedondeada.toFixed(8)} (debe ser ≤ 1.00000000)</div>`;
+    } else {
+        resultado.innerHTML = `<div class="alert-nuam alert-success">✅ Suma válida: ${sumaRedondeada.toFixed(8)}</div>`;
+    }
+});
+</script>
+{% endblock %}
+{% block extra_css %}
+<style>
+/* Estilos temporales para debug */
+body { background: #f8fafc; }
+.nuam-container { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
+.page-header { background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); padding: 2.5rem 0; margin-bottom: 2rem; border-bottom: 1px solid #e2e8f0; }
+.page-title { font-size: 2rem; font-weight: 700; color: #1a365d; margin-bottom: 0.5rem; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+.stat-card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); text-align: center; border-left: 4px solid #3182ce; }
+.stat-number { font-size: 2.5rem; font-weight: 700; color: #1a365d; margin-bottom: 0.5rem; }
+.quick-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin: 2rem 0; }
+.action-card { background: white; padding: 2rem; border-radius: 12px; text-decoration: none; color: inherit; transition: all 0.3s ease; border: 1px solid #e2e8f0; text-align: center; }
+.action-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1); text-decoration: none; color: inherit; border-color: #3182ce; }
+.action-icon { font-size: 2.5rem; margin-bottom: 1rem; display: block; color: #2d3748; }
+.nuam-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 2rem; padding: 0; }
+.nuam-card-header { background: linear-gradient(135deg, #1a365d, #2d3748); color: white; padding: 1.5rem 2rem; border-bottom: 1px solid #e2e8f0; }
+.nuam-card-body { padding: 2rem; }
+.btn-nuam-primary { background: linear-gradient(135deg, #1a365d, #3182ce); border: none; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; }
+.alert-nuam { padding: 1rem 1.5rem; border-radius: 8px; border-left: 4px solid; margin-bottom: 1.5rem; }
+.alert-success { background: #f0fff4; border-color: #38a169; color: #22543d; }
+.alert-danger { background: #fff5f5; border-color: #e53e3e; color: #742a2a; }
+</style>
+{% endblock %}

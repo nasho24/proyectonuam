@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Verificación MFA - NUAM{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h2>Verificación MFA</h2>
+        <p class="subtitle">Ingresa el código de verificación generado por tu aplicación de autenticación.</p>
+
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert {% if message.tags %}{{ message.tags }}{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="POST" class="auth-form">
+            {% csrf_token %}
+            <label for="code">Código de autenticación:</label>
+            <input type="text" id="code" name="code" placeholder="Ejemplo: 123456" required>
+
+            <button type="submit" class="btn-primary">Verificar</button>
+        </form>
+
+        <div class="extra-links">
+            <a href="{% url 'login' %}">Volver al inicio de sesión</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,11 +1,313 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib import messages 
-from .models import Empresa, CalificacionTributaria
-from .forms import CalificacionForm, EmpresaForm
+from .models import Empresa, CalificacionTributaria, Profile
+from .forms import EmpresaForm
 import csv
 from datetime import datetime
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login, authenticate, logout
+import pyotp
+import qrcode
+import base64
+from io import BytesIO
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
+from django.utils import timezone
+from .models import PasswordResetToken
+from django.contrib.auth.hashers import make_password
 
+
+def test_reset_view(request, token):
+    """Vista temporal para probar que la URL funciona"""
+    return HttpResponse(f"¡La URL funciona! Token recibido: {token}")
+
+@login_required
+def mfa_view(request):
+    user = request.user
+    profile = user.profile  # asumimos que existe modelo Profile con campo `mfa_secret`
+    
+    # Generar secreto si no existe
+    if not profile.mfa_secret:
+        secret = pyotp.random_base32()
+        profile.mfa_secret = secret
+        profile.save()
+    else:
+        secret = profile.mfa_secret
+
+
+    # Generar QR
+    otp_uri = pyotp.totp.TOTP(secret).provisioning_uri(name=user.username, issuer_name="NUAM ERP")
+    qr = qrcode.make(otp_uri)
+    buffer = BytesIO()
+    qr.save(buffer, format="PNG")
+    qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+
+    return render(request, 'auth/mfa_setup.html', {'qr_base64': qr_base64, 'secret': secret})
+
+@login_required
+def verify_mfa_view(request):
+    if request.method == 'POST':
+        code = request.POST.get('code')
+        secret = request.user.profile.mfa_secret
+        totp = pyotp.TOTP(secret)
+
+        if totp.verify(code):
+            messages.success(request, "MFA verificado correctamente.")
+            return redirect('dashboard')
+        else:
+            messages.error(request, "Código incorrecto. Intenta nuevamente.")
+    
+    return render(request, 'auth/verify_mfa.html')
+
+def login_view(request):
+    """
+    Vista de login corregida y mejorada
+    """
+    # Si ya está autenticado, redirigir al dashboard
+    if request.user.is_authenticated:
+        return redirect('calificaciones:dashboard')
+        
+    if request.method == "POST":
+        email = request.POST.get("email")
+        password = request.POST.get("password")
+        
+        # Buscar usuario por email (username o email real)
+        user = None
+        
+        # Intentar autenticar con username (que es el email en nuestro caso)
+        user = authenticate(request, username=email, password=password)
+        
+        # Si no funciona, intentar buscar por email real
+        if user is None:
+            try:
+                user_by_email = User.objects.get(email=email)
+                user = authenticate(request, username=user_by_email.username, password=password)
+            except User.DoesNotExist:
+                pass
+
+        if user is not None:
+            # Verificar si tiene MFA configurado
+            if hasattr(user, "profile") and user.profile.mfa_secret:
+                request.session["pending_user_id"] = user.id
+                return redirect("calificaciones:verify_mfa")
+            
+            # Login sin MFA
+            login(request, user)
+            messages.success(request, f"¡Bienvenido {user.first_name}!")
+            return redirect("calificaciones:dashboard")
+        else:
+            messages.error(request, "Credenciales incorrectas")
+    
+    return render(request, "login.html")
+
+def forgot_password_view(request):
+    """Vista para recuperación - CON localhost"""
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip().lower()
+        
+        try:
+            user = User.objects.get(email=email)
+            reset_token = PasswordResetToken.objects.create(user=user)
+            
+            # USAR localhost EN LUGAR DE 127.0.0.1
+            reset_url = f"http://localhost:8000/reset-password/{reset_token.token}/"
+            
+            print(f"URL GENERADA: {reset_url}")
+            
+            send_mail(
+                'Recuperación de Contraseña - NUAM Capital',
+                f'''
+                NUAM CAPITAL - Recuperación de Contraseña
+
+                Hola {user.first_name},
+
+                Para restablecer tu contraseña, haz clic en el siguiente enlace:
+
+                {reset_url}
+
+                Este enlace expirará en 24 horas.
+
+                Equipo NUAM Capital
+                ''',
+                'NUAM Capital <noreply@nuamcapital.cl>',
+                [user.email],
+                fail_silently=False,
+                html_message=f'''
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <div style="background: #1a365d; color: white; padding: 20px; text-align: center;">
+                        <h2 style="margin: 0;">NUAM CAPITAL</h2>
+                    </div>
+                    
+                    <div style="padding: 25px;">
+                        <p>Hola <strong>{user.first_name}</strong>,</p>
+                        <p>Para restablecer tu contraseña, haz clic en el siguiente botón:</p>
+                        
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="{reset_url}" style="background: #1a365d; color: white; padding: 14px 35px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+                                Restablecer Contraseña
+                            </a>
+                        </div>
+                        
+                        <p style="color: #666; font-size: 14px; text-align: center;">
+                            Este enlace expirará en 24 horas.
+                        </p>
+                    </div>
+                </div>
+                '''
+            )
+            
+            messages.success(request, f'Se envió un enlace de recuperación a {email}. Revisa tu bandeja de entrada.')
+            
+        except User.DoesNotExist:
+            messages.error(request, f'No existe una cuenta con el email: {email}')
+        except Exception as e:
+            messages.error(request, 'Error temporal al enviar el email.')
+    
+    return render(request, 'forgot_password.html')
+
+def reset_password_view(request, token):
+    """Vista para restablecer contraseña - CON DEBUG"""
+    try:
+        reset_token = PasswordResetToken.objects.get(token=token)
+        
+        if reset_token.used:
+            messages.error(request, "Este enlace ya fue utilizado.")
+            return redirect('calificaciones:forgot_password')
+        
+        # Verificar expiración
+        now = timezone.now()
+        if timezone.is_naive(reset_token.expires_at):
+            from django.conf import settings
+            default_timezone = timezone.get_default_timezone()
+            expires_at = timezone.make_aware(reset_token.expires_at, default_timezone)
+        else:
+            expires_at = reset_token.expires_at
+            
+        if now >= expires_at:
+            messages.error(request, "El enlace ha expirado.")
+            return redirect('calificaciones:forgot_password')
+        
+        if request.method == 'POST':
+            password = request.POST.get('password')
+            confirm_password = request.POST.get('confirm_password')
+            
+            print(f" DEBUG RESET PASSWORD:")
+            print(f"   Usuario: {reset_token.user.email}")
+            print(f"   Nueva contraseña recibida: {password}")
+            print(f"   Confirmación: {confirm_password}")
+            
+            if password != confirm_password:
+                messages.error(request, "Las contraseñas no coinciden.")
+            elif len(password) < 6:
+                messages.error(request, "La contraseña debe tener al menos 6 caracteres.")
+            else:
+                # Actualizar contraseña
+                user = reset_token.user
+                print(f"   Contraseña ANTES: {user.password[:20]}...")
+                
+                user.set_password(password)
+                user.save()
+                
+                print(f"   Contraseña DESPUÉS: {user.password[:20]}...")
+                print(f"   Contraseña actualizada")
+                
+                # Marcar token como usado
+                reset_token.used = True
+                reset_token.save()
+                
+                messages.success(request, "Contraseña actualizada correctamente. Ahora puedes iniciar sesión.")
+                return redirect('calificaciones:login')
+        
+        return render(request, 'reset_password.html', {'token': token})
+        
+    except PasswordResetToken.DoesNotExist:
+        messages.error(request, "El enlace de recuperación no es válido.")
+        return redirect('calificaciones:forgot_password')
+
+def logout_view(request):
+    """Vista de logout corregida"""
+    logout(request)
+    messages.success(request, 'Has cerrado sesión exitosamente.')
+    return redirect('calificaciones:login') 
+
+def register_view(request):
+    """Vista de registro corregida con mejor manejo de errores"""
+    if request.user.is_authenticated:
+        return redirect('calificaciones:home')
+        
+    if request.method == "POST":
+        nombre = request.POST.get("name")
+        email = request.POST.get("email")
+        password = request.POST.get("password")
+        confirm = request.POST.get("confirm_password")
+
+        # Validaciones
+        if password != confirm:
+            messages.error(request, "Las contraseñas no coinciden")
+            return render(request, "home_public.html")
+
+        # Verificar si el usuario ya existe (por email o username)
+        if User.objects.filter(email=email).exists():
+            messages.error(request, "Ya existe una cuenta con este correo electrónico")
+            return render(request, "home_public.html")
+
+        if User.objects.filter(username=email).exists():
+            messages.error(request, "Ya existe una cuenta con este correo electrónico")
+            return render(request, "home_public.html")
+
+        try:
+            # Crear usuario
+            user = User.objects.create_user(
+                username=email,
+                email=email,
+                first_name=nombre,
+                password=password
+            )
+            
+            # Verificar si ya tiene perfil (por si acaso)
+            if not hasattr(user, 'profile'):
+                # Crear perfil con MFA solo si no existe
+                secret = pyotp.random_base32()
+                Profile.objects.create(user=user, mfa_secret=secret)
+            
+            messages.success(request, "Cuenta creada correctamente. Ahora puedes iniciar sesión.")
+            return redirect("calificaciones:login")
+
+        except Exception as e:
+            # Manejo genérico de errores inesperados
+            print(f"Error en registro: {str(e)}")  # Para debug
+            messages.error(request, "Error al crear la cuenta. Por favor intenta nuevamente.")
+    
+    return render(request, "register.html")
+
+def home(request):
+    """Página principal ÚNICA - Dashboard si autenticado, Landing si no"""
+    if request.user.is_authenticated:
+        # Datos para el dashboard autenticado
+        total_empresas = Empresa.objects.count()
+        total_calificaciones = CalificacionTributaria.objects.count()
+        
+        # Contar usuarios con MFA habilitado
+        usuarios_con_mfa = Profile.objects.filter(mfa_secret__isnull=False).count()
+        
+        context = {
+            'page_title': 'Panel General - NUAM',
+            'total_empresas': total_empresas,
+            'total_calificaciones': total_calificaciones,
+            'usuarios_activos': usuarios_con_mfa,
+            'factores_range': range(8, 17),
+        }
+        return render(request, 'dashboard_authenticated.html', context)
+    else:
+        # Contexto para landing page
+        context = {
+            'page_title': 'NUAM Capital - Sistema de Gestión',
+        }
+        return render(request, 'home_public.html', context)
+
+    
+@login_required
 def mantenedor_calificaciones(request):
     """Vista principal del mantenedor con datos reales"""
     calificaciones = CalificacionTributaria.objects.all().select_related('empresa')
@@ -27,6 +329,7 @@ def mantenedor_calificaciones(request):
     }
     return render(request, 'mantenedor.html', context)
 
+@login_required  # Solo para usuarios autenticados
 def ingresar_calificacion(request):
     """Vista para ingresar nueva calificación"""
     empresas = Empresa.objects.all()  # Obtener empresas para el dropdown
@@ -61,6 +364,7 @@ def ingresar_calificacion(request):
     }
     return render(request, 'form_calificacion.html', context)
 
+@login_required  # Solo para usuarios autenticados
 def modificar_calificacion(request, id):
     """Vista para modificar calificación existente"""
     calificacion = get_object_or_404(CalificacionTributaria, id=id)
@@ -99,6 +403,7 @@ def modificar_calificacion(request, id):
     }
     return render(request, 'form_calificacion.html', context)
 
+@login_required  # Solo para usuarios autenticados
 def eliminar_calificacion(request, id):
     """Vista para eliminar calificación"""
     calificacion = get_object_or_404(CalificacionTributaria, id=id)
@@ -118,6 +423,7 @@ def eliminar_calificacion(request, id):
 def carga_masiva(request):
     return render(request, 'carga_masiva.html')
 
+@login_required  # Solo para usuarios autenticados
 def lista_empresas(request):
     """Vista para listar empresas"""
     empresas = Empresa.objects.all()
@@ -126,6 +432,7 @@ def lista_empresas(request):
     }
     return render(request, 'empresas.html', context)
 
+@login_required  # Solo para usuarios autenticados
 def agregar_empresa(request):
     """Vista para agregar nueva empresa"""
     if request.method == 'POST':
@@ -184,7 +491,7 @@ def confirmar_eliminar(request, id):
     }
     return render(request, 'confirmar_eliminar.html', context)
 
-
+@login_required  # Solo para usuarios autenticados
 def descargar_plantilla_montos(request):
     """Descargar plantilla CSV formal para carga de montos DJ1948"""
     response = HttpResponse(content_type='text/csv; charset=utf-8')
@@ -361,7 +668,7 @@ def descargar_plantilla_montos(request):
     writer.writerow(['DOCUMENTO DE USO INTERNO - CONFIDENCIALIDAD PROTEGIDA'])
     
     return response
-
+@login_required
 def descargar_plantilla_factores(request):
     """Descargar plantilla CSV formal para carga de factores"""
     response = HttpResponse(content_type='text/csv; charset=utf-8')

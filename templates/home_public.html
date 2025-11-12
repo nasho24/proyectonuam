@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}NUAM Capital - Sistema de Gestión{% endblock %}
+
+{% block content %}
+<div class="auth-body">
+    <div class="auth-container">
+        <div class="auth-card">
+            <!-- Header -->
+            <div class="auth-header">
+                <i class="bi bi-graph-up-arrow display-4 mb-3"></i>
+                <h1 class="auth-title">NUAM CAPITAL</h1>
+                <p class="auth-subtitle">Sistema Integral de Gestión Tributaria</p>
+            </div>
+
+            <!-- Content -->
+            <div class="auth-content">
+                <div class="text-center mb-4">
+                    <h3 class="text-nuam-dark mb-3">Bienvenido al Sistema</h3>
+                    <p class="text-muted">
+                        Accede a nuestra plataforma para gestionar tus inversiones 
+                        y cumplimientos tributarios de manera segura.
+                    </p>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="d-grid gap-3">
+                    <a href="{% url 'calificaciones:login' %}" class="btn btn-nuam-primary btn-lg">
+                        <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                    </a>
+                    <a href="{% url 'calificaciones:register' %}" class="btn btn-nuam-outline btn-lg">
+                        <i class="bi bi-person-plus"></i> Registrarse
+                    </a>
+                </div>
+
+                <!-- Información de seguridad -->
+                <div class="text-center mt-4 pt-3 border-top">
+                    <div class="security-badge">
+                        <i class="bi bi-shield-check"></i> Sistema MFA
+                    </div>
+                    <small class="text-muted">
+                        Autenticación de dos factores para máxima seguridad
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

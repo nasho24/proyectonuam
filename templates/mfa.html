@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autenticación MFA - NUAM</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="auth-body">
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <h1 class="auth-title">Activar Autenticación MFA</h1>
+        <p class="auth-subtitle">Escanea este código QR en tu aplicación de autenticación</p>
+      </div>
+      <div class="auth-content mfa-setup">
+        <img src="data:image/png;base64,{{ qr_base64 }}" alt="Código QR" class="qr-code">
+        <p>O usa este código manualmente:</p>
+        <div class="security-badge">{{ secret }}</div>
+        <a href="{% url 'verify_mfa' %}" class="btn-nuam-primary mt-3">Verificar Código</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -32,26 +32,38 @@ body {
     padding: 0 20px;
 }
 
-/* ===== NAVBAR CORPORATIVA ===== */
+/* ===== NAVBAR HORIZONTAL CORREGIDO ===== */
 .nuam-navbar {
     background: linear-gradient(135deg, var(--nuam-primary) 0%, #2c5282 100%);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     padding: 1rem 0;
     border-bottom: 3px solid var(--nuam-accent);
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    transition: all 0.3s ease;
 }
 
-.nuam-brand {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: white !important;
+.nuam-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: space-between;
+    flex-wrap: wrap;
 }
 
-.nuam-brand::before {
-    content: "📊";
-    font-size: 1.8rem;
+/* MENÚ HORIZONTAL - ESTO ES LO IMPORTANTE */
+.navbar-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 1rem;
+    margin: 0 2rem;
+    flex-grow: 1;
+    justify-content: center;
 }
 
 .nav-link {
@@ -60,13 +72,90 @@ body {
     padding: 0.5rem 1rem !important;
     border-radius: 6px;
     transition: all 0.3s ease;
-    margin: 0 0.25rem;
+    text-decoration: none;
+    display: flex !important;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    font-size: 0.95rem;
 }
 
 .nav-link:hover {
     background-color: rgba(255, 255, 255, 0.1);
     color: white !important;
     transform: translateY(-1px);
+}
+
+/* Usuario y logout */
+.nav-user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.navbar-text {
+    color: #e2e8f0 !important;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Botón hamburguesa para móvil */
+.navbar-toggler {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.navbar-toggler:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .navbar-toggler {
+        display: block;
+    }
+    
+    .navbar-nav {
+        display: none !important;
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--nuam-primary);
+        padding: 1rem;
+        margin: 0;
+        gap: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .navbar-nav.active {
+        display: flex !important;
+    }
+    
+    .nav-user {
+        flex-direction: column;
+        gap: 0.5rem;
+        display: none;
+    }
+    
+    .nav-user.active {
+        display: flex;
+    }
+    
+    .nav-link {
+        padding: 0.75rem 1rem !important;
+        justify-content: center;
+    }
 }
 
 /* ===== HEADER DE PÁGINA ===== */
@@ -582,5 +671,222 @@ body {
     
     .page-title {
         font-size: 1.6rem;
+    }
+}
+/* ===== ESTILOS PARA PÁGINAS DE AUTENTICACIÓN ===== */
+.auth-body {
+    background: linear-gradient(135deg, var(--nuam-primary) 0%, var(--nuam-secondary) 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 400px;
+}
+
+.auth-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.auth-header {
+    background: linear-gradient(135deg, var(--nuam-primary), var(--nuam-secondary));
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.auth-logo {
+    height: 50px;
+    width: auto;
+    margin-bottom: 1rem;
+    filter: brightness(0) invert(1);
+}
+
+.auth-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.auth-content {
+    padding: 2rem;
+}
+
+.auth-footer {
+    background: #f8f9fa;
+    padding: 1rem;
+    text-align: center;
+    border-top: 1px solid var(--nuam-border);
+}
+
+.auth-form .form-control {
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--nuam-border);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.auth-form .form-control:focus {
+    border-color: var(--nuam-accent);
+    box-shadow: 0 0 0 0.2rem rgba(49, 130, 206, 0.1);
+}
+
+/* Estilos específicos para MFA */
+.mfa-setup {
+    text-align: center;
+    padding: 1rem;
+}
+
+.qr-code {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 2px solid var(--nuam-border);
+    margin: 1rem 0;
+}
+
+.security-badge {
+    background: var(--nuam-success);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+    margin-bottom: 1rem;
+}
+
+/* ===== FIX URGENTE PARA NAVBAR HORIZONTAL ===== */
+.navbar-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 1rem;
+    margin: 0 2rem;
+    flex-grow: 1;
+    justify-content: center;
+    list-style: none !important;
+    padding: 0 !important;
+}
+
+.navbar-nav .nav-link {
+    display: flex !important;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    text-decoration: none;
+    color: #e2e8f0 !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white !important;
+}
+
+/* Asegurar que el contenedor principal esté bien */
+.nuam-container {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+}
+
+/* Ocultar toggler en desktop */
+.navbar-toggler {
+    display: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .navbar-toggler {
+        display: block;
+    }
+    
+    .navbar-nav {
+        display: none !important;
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--nuam-primary);
+        padding: 1rem;
+        margin: 0;
+    }
+    
+    .navbar-nav.active {
+        display: flex !important;
+    }
+}
+/* ===== FIX PARA CONTENIDO DEBAJO DEL NAVBAR FIJO ===== */
+main {
+    margin-top: 80px; /* Ajusta según la altura de tu navbar */
+    min-height: calc(100vh - 80px);
+}
+
+/* Asegurar que el body tenga padding top */
+body {
+    padding-top: 80px;
+}
+
+/* Si usas containers específicos */
+.nuam-container {
+    padding-top: 20px;
+}
+
+/* Para las páginas de autenticación que no deben tener este margen */
+.auth-body main {
+    margin-top: 0;
+    padding-top: 0;
+}
+
+.auth-body {
+    padding-top: 0;
+}
+/* ===== AJUSTES FINALES OPCIONALES ===== */
+
+/* Mejorar el scroll suave */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Asegurar que los enlaces activos se destaquen */
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    font-weight: 600;
+}
+
+/* Mejorar el hover en desktop */
+@media (min-width: 769px) {
+    .nav-link:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+}
+
+/* Ajuste fino del margen superior si es necesario */
+@media (max-width: 768px) {
+    main {
+        margin-top: 70px; /* Un poco menos en móvil */
+    }
+    
+    body {
+        padding-top: 70px;
     }
 }

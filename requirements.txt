@@ -1,0 +1,17 @@
+asgiref==3.10.0
+colorama==0.4.6
+crispy-bootstrap4==2025.6
+Django==5.2.8
+django-allauth==65.13.0
+django-crispy-forms==2.5
+django-otp==1.6.3
+django-otp-yubikey==1.1.0
+psycopg==3.2.12
+psycopg-binary==3.2.12
+psycopg2-binary==2.9.11
+pycryptodome==3.23.0
+python-dotenv==1.2.1
+qrcode==8.2
+sqlparse==0.5.3
+tzdata==2025.2
+YubiOTP==1.0.0
