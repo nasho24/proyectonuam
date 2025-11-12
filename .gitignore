@@ -1,0 +1,27 @@
+# Archivos de entorno
+.env
+*.env
+
+# Backups de base de datos
+backups/
+*.sql
+*.backup
+
+# Archivos de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Base de datos SQLite (si la usas)
+*.sqlite3
+
+# Archivos de IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Archivos temporales
+*.tmp
