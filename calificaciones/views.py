@@ -428,10 +428,15 @@ def reset_password_view(request, token):
         return redirect('calificaciones:forgot_password')
 
 def logout_view(request):
-    """Vista de logout corregida"""
+    """Vista de logout - limpia mensajes y redirige"""
+    # Limpiar mensajes existentes
+    list(messages.get_messages(request))
+    
+    # Cerrar sesión
     logout(request)
-    messages.success(request, 'Has cerrado sesión exitosamente.')
-    return redirect('calificaciones:login') 
+    
+    # Redirigir al login sin mensajes
+    return redirect('calificaciones:login')
 
 def register_view(request):
     """Vista de registro corregida con mejor manejo de errores"""
@@ -484,13 +489,13 @@ def register_view(request):
     return render(request, "register.html")
 
 def home(request):
-    """Página principal ÚNICA - Dashboard si autenticado, Landing si no"""
+    """Página principal - Datos DEL USUARIO ACTUAL"""
     if request.user.is_authenticated:
-        # Datos para el dashboard autenticado
-        total_empresas = Empresa.objects.count()
-        total_calificaciones = CalificacionTributaria.objects.count()
+        # Datos para el dashboard autenticado - SOLO DEL USUARIO
+        total_empresas = Empresa.objects.filter(usuario=request.user).count()
+        total_calificaciones = CalificacionTributaria.objects.filter(usuario=request.user).count()
         
-        # Contar usuarios con MFA habilitado
+        # Contar usuarios con MFA habilitado (esto sigue global)
         usuarios_con_mfa = Profile.objects.filter(mfa_secret__isnull=False).count()
         
         context = {
@@ -507,14 +512,13 @@ def home(request):
             'page_title': 'NUAM Capital - Sistema de Gestión',
         }
         return render(request, 'home_public.html', context)
-
     
 @login_required
 def mantenedor_calificaciones(request):
-    """Vista principal del mantenedor con datos reales"""
-    calificaciones = CalificacionTributaria.objects.all().select_related('empresa')
+    """Vista principal del mantenedor con datos DEL USUARIO ACTUAL"""
+    calificaciones = CalificacionTributaria.objects.filter(usuario=request.user).select_related('empresa')
     
-    # Filtros
+    # Filtros (solo sobre los datos del usuario)
     ejercicio = request.GET.get('ejercicio')
     mercado = request.GET.get('mercado')
     instrumento = request.GET.get('instrumento')
@@ -531,15 +535,15 @@ def mantenedor_calificaciones(request):
     }
     return render(request, 'mantenedor.html', context)
 
-@login_required  # Solo para usuarios autenticados
+@login_required
 def ingresar_calificacion(request):
-    """Vista para ingresar nueva calificación"""
-    empresas = Empresa.objects.all()  # Obtener empresas para el dropdown
+    """Vista para ingresar nueva calificación - ASIGNAR AL USUARIO"""
+    empresas = Empresa.objects.filter(usuario=request.user)  # Solo empresas del usuario
     
     if request.method == 'POST':
         try:
-            # Crear calificación manualmente con los datos del formulario
             calificacion = CalificacionTributaria(
+                usuario=request.user,  # ⬅️ ASIGNAR USUARIO AUTOMÁTICAMENTE
                 empresa_id=request.POST.get('empresa'),
                 ejercicio=request.POST.get('ejercicio'),
                 mercado=request.POST.get('mercado'),
@@ -625,22 +629,24 @@ def eliminar_calificacion(request, id):
 def carga_masiva(request):
     return render(request, 'carga_masiva.html')
 
-@login_required  # Solo para usuarios autenticados
+@login_required
 def lista_empresas(request):
-    """Vista para listar empresas"""
-    empresas = Empresa.objects.all()
+    """Vista para listar empresas DEL USUARIO ACTUAL"""
+    empresas = Empresa.objects.filter(usuario=request.user)
     context = {
         'empresas': empresas,
     }
     return render(request, 'empresas.html', context)
 
-@login_required  # Solo para usuarios autenticados
+@login_required
 def agregar_empresa(request):
-    """Vista para agregar nueva empresa"""
+    """Vista para agregar nueva empresa - ASIGNAR AL USUARIO"""
     if request.method == 'POST':
         form = EmpresaForm(request.POST)
         if form.is_valid():
-            empresa = form.save()
+            empresa = form.save(commit=False)
+            empresa.usuario = request.user  # ⬅️ ASIGNAR USUARIO AUTOMÁTICAMENTE
+            empresa.save()
             messages.success(request, f'Empresa {empresa.nombre} creada correctamente')
             return redirect('calificaciones:empresas')
     else:

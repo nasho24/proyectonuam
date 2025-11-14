@@ -6,11 +6,10 @@ from django.core.exceptions import ValidationError
 import secrets
 from datetime import timedelta
 from django.utils import timezone
+
 # ==========================================
 # MODELOS PRINCIPALES
 # ==========================================
-
-
 def clean(self):
     if not self.validar_factores():
         raise ValidationError("La suma de los factores del 8 al 16 no puede ser mayor que 1.")
@@ -20,12 +19,14 @@ def save(self, *args, **kwargs):
     super().save(*args, **kwargs)
 
 class Empresa(models.Model):
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True) 
     rut = models.CharField(max_length=20, unique=True)
     nombre = models.CharField(max_length=255)
     giro = models.CharField(max_length=255, blank=True, null=True)
     direccion = models.TextField(blank=True, null=True)
     telefono = models.CharField(max_length=20, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
+    
     class Meta:
         verbose_name = "Empresa"
         verbose_name_plural = "Empresas"
@@ -45,6 +46,7 @@ class CalificacionTributaria(models.Model):
         ('C', 'Cerrada'),
     ]
     
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True) 
     empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE)
     ejercicio = models.IntegerField()
     mercado = models.CharField(max_length=10)
@@ -64,7 +66,6 @@ class CalificacionTributaria(models.Model):
 
 class FactoresCalificacion(models.Model):
     calificacion = models.OneToOneField(CalificacionTributaria, on_delete=models.CASCADE)
-    
     # Factores del 8 al 37
     factor_8 = models.DecimalField(max_digits=9, decimal_places=8, blank=True, null=True)
     factor_9 = models.DecimalField(max_digits=9, decimal_places=8, blank=True, null=True)
@@ -125,7 +126,7 @@ class ArchivoCarga(models.Model):
         return f"{self.nombre_archivo} - {self.fecha_carga}"
 
 # ==========================================
-# MODELO USERPROFILE (NUEVO)
+# MODELO USERPROFILE 
 # ==========================================
 
 class UserProfile(models.Model):
