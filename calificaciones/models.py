@@ -4,7 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.exceptions import ValidationError
 import secrets
-from datetime import datetime, timedelta
+from datetime import timedelta
 from django.utils import timezone
 # ==========================================
 # MODELOS PRINCIPALES
@@ -147,14 +147,32 @@ class UserProfile(models.Model):
 # ==========================================
         
 class Profile(models.Model):
+    USER_ROLES = [
+        ('ADMIN', 'Administrador'),
+        ('USER', 'Usuario Normal'),
+        ('VIEWER', 'Solo Lectura'),
+    ]
+    
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     mfa_secret = models.CharField(max_length=32, blank=True, null=True)
+    mfa_email_code = models.CharField(max_length=6, blank=True, null=True)  # NUEVO
+    mfa_email_code_expires = models.DateTimeField(null=True, blank=True)    # NUEVO
     telefono = models.CharField(max_length=20, blank=True, null=True)
     empresa = models.ForeignKey('Empresa', on_delete=models.SET_NULL, null=True, blank=True)
+    rol = models.CharField(max_length=10, choices=USER_ROLES, default='USER')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
-        return f"Perfil de {self.user.username}"
+        return f"Perfil de {self.user.username} - {self.rol}"
+    
+    def es_administrador(self):
+        return self.rol == 'ADMIN'
+    
+    def puede_editar(self):
+        return self.rol in ['ADMIN', 'USER']
+    
+    def es_solo_lectura(self):
+        return self.rol == 'VIEWER'
     
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):

@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestión de Usuarios - Admin NUAM{% endblock %}
+
+{% block content %}
+<div class="nuam-container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="bi bi-people-fill"></i> Gestión de Usuarios
+        </h1>
+        <p class="page-subtitle">Administrar permisos y roles del sistema</p>
+    </div>
+
+    <!-- Botón Crear Usuario -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>Lista de Usuarios</h4>
+        <a href="{% url 'calificaciones:admin_create_user' %}" class="btn btn-nuam-primary">
+            <i class="bi bi-person-plus"></i> Crear Nuevo Usuario
+        </a>
+    </div>
+
+    <!-- Tabla de Usuarios -->
+    <div class="nuam-card">
+        <div class="nuam-card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for usuario in usuarios %}
+                        <tr>
+                            <td>
+                                <strong>{{ usuario.username }}</strong>
+                                {% if usuario == request.user %}
+                                <span class="badge bg-primary ms-1">Tú</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ usuario.first_name }} {{ usuario.last_name }}</td>
+                            <td>{{ usuario.email }}</td>
+                            <td>
+                                <span class="badge {% if usuario.profile.rol == 'ADMIN' %}bg-danger{% elif usuario.profile.rol == 'USER' %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {{ usuario.profile.get_rol_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {% if usuario.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ usuario.is_active|yesno:"Activo,Inactivo" }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'calificaciones:admin_edit_user' usuario.id %}" class="btn btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    {% if usuario != request.user %}
+                                    <a href="{% url 'calificaciones:admin_delete_user' usuario.id %}" class="btn btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="bi bi-people display-4"></i>
+                                <p class="mt-2">No hay usuarios registrados</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

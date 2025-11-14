@@ -1,11 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib import messages 
-from .models import Empresa, CalificacionTributaria, Profile
-from .forms import EmpresaForm
+from .models import Empresa, CalificacionTributaria, Profile, PasswordResetToken
+from .forms import EmpresaForm, UserCreateForm, UserManagementForm
 import csv
-from datetime import datetime
-from django.contrib.auth.decorators import login_required
+from datetime import datetime, timedelta
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login, authenticate, logout
 import pyotp
 import qrcode
@@ -14,18 +14,169 @@ from io import BytesIO
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.utils import timezone
-from .models import PasswordResetToken
-from django.contrib.auth.hashers import make_password
+import random
+
+def send_mfa_email_code(user):
+    """Genera y envía código MFA por email"""
+    # Generar código de 6 dígitos
+    code = str(random.randint(100000, 999999))
+    
+    # Guardar en el perfil
+    profile = user.profile
+    profile.mfa_email_code = code
+    profile.mfa_email_code_expires = timezone.now() + timedelta(minutes=10)  # 10 minutos
+    profile.save()
+    
+    # Enviar email
+    try:
+        send_mail(
+            'Código de Verificación MFA - NUAM Capital',
+            f'''
+            NUAM CAPITAL - Código de Verificación
+
+            Hola {user.first_name},
+
+            Tu código de verificación para acceder a NUAM Capital es:
+
+            🔒 {code}
+
+            Este código expirará en 10 minutos.
+
+            Si no solicitaste este código, ignora este mensaje.
+
+            Equipo NUAM Capital
+            ''',
+            'NUAM Capital <noreply@nuamcapital.cl>',
+            [user.email],
+            fail_silently=False,
+            html_message=f'''
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="background: #1a365d; color: white; padding: 20px; text-align: center;">
+                    <h2 style="margin: 0;">NUAM CAPITAL</h2>
+                </div>
+                
+                <div style="padding: 25px;">
+                    <h3 style="color: #1a365d;">Código de Verificación</h3>
+                    
+                    <p>Hola <strong>{user.first_name}</strong>,</p>
+                    
+                    <p>Usa el siguiente código para completar tu acceso:</p>
+                    
+                    <div style="background: #f8f9fa; border: 2px dashed #dee2e6; padding: 20px; text-align: center; margin: 20px 0;">
+                        <div style="font-size: 2rem; font-weight: bold; letter-spacing: 0.5rem; color: #1a365d;">
+                            {code}
+                        </div>
+                        <small style="color: #6c757d;">Válido por 10 minutos</small>
+                    </div>
+                    
+                    <p style="color: #6c757d; font-size: 0.9rem;">
+                        Si no solicitaste este código, puedes ignorar este mensaje.
+                    </p>
+                </div>
+            </div>
+            '''
+        )
+        return True
+    except Exception as e:
+        print(f"Error enviando código MFA: {e}")
+        return False
 
 
+def es_administrador(user):
+    return hasattr(user, 'profile') and user.profile.es_administrador()
+
+@login_required
+@user_passes_test(es_administrador)
+def admin_users(request):
+    """Vista principal de administración de usuarios"""
+    usuarios = User.objects.all().select_related('profile')
+    
+    
+    context = {
+        'usuarios': usuarios,
+        'total_usuarios': usuarios.count(),
+        'admins': usuarios.filter(profile__rol='ADMIN').count(),
+        'usuarios_normales': usuarios.filter(profile__rol='USER').count(),
+        'viewers': usuarios.filter(profile__rol='VIEWER').count(),
+    }
+    return render(request, 'users_management.html', context)
+
+@login_required
+@user_passes_test(es_administrador)
+def admin_create_user(request):
+    """Vista para crear nuevo usuario"""
+    if request.method == 'POST':
+        form = UserCreateForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            messages.success(request, f'Usuario {user.username} creado exitosamente')
+            return redirect('calificaciones:admin_users')
+    else:
+        form = UserCreateForm()
+    
+    context = {
+        'form': form,
+        'titulo': 'Crear Nuevo Usuario'
+    }
+    return render(request, 'user_management_form.html', context)
+
+@login_required
+@user_passes_test(es_administrador)
+def admin_edit_user(request, user_id):
+    """Vista para editar usuario existente"""
+    usuario = get_object_or_404(User, id=user_id)
+    
+    if request.method == 'POST':
+        form = UserManagementForm(request.POST, instance=usuario)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Usuario {usuario.username} actualizado exitosamente')
+            return redirect('calificaciones:admin_users')
+    else:
+        form = UserManagementForm(instance=usuario)
+    
+    context = {
+        'form': form,
+        'usuario': usuario,
+        'titulo': f'Editar Usuario: {usuario.username}'
+    }
+    return render(request, 'user_management_form.html', context)
+
+@login_required
+@user_passes_test(es_administrador)
+def admin_delete_user(request, user_id):
+    """Vista para eliminar usuario"""
+    usuario = get_object_or_404(User, id=user_id)
+    
+    if request.method == 'POST':
+        username = usuario.username
+        # No permitir eliminar el propio usuario
+        if usuario == request.user:
+            messages.error(request, 'No puedes eliminar tu propio usuario')
+        else:
+            usuario.delete()
+            messages.success(request, f'Usuario {username} eliminado exitosamente')
+        return redirect('calificaciones:admin_users')
+    
+    context = {
+        'usuario': usuario,
+        'titulo': 'Eliminar Usuario'
+    }
+    return render(request, 'confirm_delete_user.html', context)
 def test_reset_view(request, token):
     """Vista temporal para probar que la URL funciona"""
     return HttpResponse(f"¡La URL funciona! Token recibido: {token}")
 
 @login_required
 def mfa_view(request):
+    """Vista para configurar y verificar MFA en una sola página"""
     user = request.user
-    profile = user.profile  # asumimos que existe modelo Profile con campo `mfa_secret`
+    profile = user.profile
+    
+    # Si ya está verificado, redirigir al dashboard
+    if hasattr(profile, 'mfa_verified') and profile.mfa_verified:
+        messages.info(request, "MFA ya está configurado y verificado")
+        return redirect('calificaciones:dashboard')
     
     # Generar secreto si no existe
     if not profile.mfa_secret:
@@ -35,30 +186,73 @@ def mfa_view(request):
     else:
         secret = profile.mfa_secret
 
-
     # Generar QR
-    otp_uri = pyotp.totp.TOTP(secret).provisioning_uri(name=user.username, issuer_name="NUAM ERP")
-    qr = qrcode.make(otp_uri)
-    buffer = BytesIO()
-    qr.save(buffer, format="PNG")
-    qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+    try:
+        import qrcode
+        import base64
+        from io import BytesIO
+        
+        otp_uri = pyotp.totp.TOTP(secret).provisioning_uri(
+            name=user.email, 
+            issuer_name="NUAM Capital"
+        )
+        qr = qrcode.make(otp_uri)
+        buffer = BytesIO()
+        qr.save(buffer, format="PNG")
+        qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+        
+        return render(request, 'mfa.html', {
+            'qr_base64': qr_base64, 
+            'secret': secret
+        })
+        
+    except ImportError:
+        messages.error(request, "Error: No se puede generar el QR code")
+        return render(request, 'mfa.html', {
+            'secret': secret
+        })
 
-    return render(request, 'auth/mfa_setup.html', {'qr_base64': qr_base64, 'secret': secret})
-
-@login_required
 def verify_mfa_view(request):
-    if request.method == 'POST':
-        code = request.POST.get('code')
-        secret = request.user.profile.mfa_secret
-        totp = pyotp.TOTP(secret)
-
-        if totp.verify(code):
-            messages.success(request, "MFA verificado correctamente.")
-            return redirect('dashboard')
-        else:
-            messages.error(request, "Código incorrecto. Intenta nuevamente.")
+    """Vista para verificar código MFA - SOLO EMAIL"""
+    pending_user_id = request.session.get('pending_user_id')
     
-    return render(request, 'auth/verify_mfa.html')
+    if not pending_user_id:
+        messages.error(request, "Sesión de verificación no válida")
+        return redirect('calificaciones:login')
+    
+    try:
+        user = User.objects.get(id=pending_user_id)
+    except User.DoesNotExist:
+        messages.error(request, "Usuario no encontrado")
+        return redirect('calificaciones:login')
+
+    if request.method == 'POST':
+        code = request.POST.get('code', '').strip()
+        
+        if not code:
+            messages.error(request, "Por favor ingresa el código de verificación")
+            return render(request, 'verify_mfa.html')
+        
+        # Validar código email
+        profile = user.profile
+        if (profile.mfa_email_code and 
+            profile.mfa_email_code == code and
+            profile.mfa_email_code_expires and
+            profile.mfa_email_code_expires > timezone.now()):
+            
+            # ✅ Código correcto
+            profile.mfa_email_code = None  # Limpiar código usado
+            profile.mfa_email_code_expires = None
+            profile.save()
+            
+            del request.session['pending_user_id']
+            login(request, user)
+            messages.success(request, f"✅ ¡Verificación exitosa! Bienvenido {user.first_name}")
+            return redirect('calificaciones:dashboard')
+        else:
+            messages.error(request, "❌ Código incorrecto o expirado. Intenta nuevamente.")
+    
+    return render(request, 'verify_mfa.html')
 
 def login_view(request):
     """
@@ -89,8 +283,15 @@ def login_view(request):
         if user is not None:
             # Verificar si tiene MFA configurado
             if hasattr(user, "profile") and user.profile.mfa_secret:
-                request.session["pending_user_id"] = user.id
-                return redirect("calificaciones:verify_mfa")
+                # ENVIAR CÓDIGO POR EMAIL en lugar de redirigir a app
+                if send_mfa_email_code(user):
+                    request.session["pending_user_id"] = user.id
+                    request.session["mfa_type"] = "email"  # Indicar que es MFA por email
+                    messages.info(request, "Se ha enviado un código de verificación a tu email")
+                    return redirect("calificaciones:verify_mfa")
+                else:
+                    messages.error(request, "Error al enviar código de verificación")
+                    return render(request, "login.html")
             
             # Login sin MFA
             login(request, user)
@@ -99,6 +300,7 @@ def login_view(request):
         else:
             messages.error(request, "Credenciales incorrectas")
     
+    # Si es GET, simplemente renderizar el template
     return render(request, "login.html")
 
 def forgot_password_view(request):

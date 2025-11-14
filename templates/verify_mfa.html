@@ -1,34 +1,62 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Verificación MFA - NUAM{% endblock %}
+{% block title %}Verificar MFA - NUAM{% endblock %}
 
 {% block content %}
-<div class="auth-container">
-    <div class="auth-card">
-        <h2>Verificación MFA</h2>
-        <p class="subtitle">Ingresa el código de verificación generado por tu aplicación de autenticación.</p>
-
-        {% if messages %}
-            <div class="messages">
-                {% for message in messages %}
-                    <div class="alert {% if message.tags %}{{ message.tags }}{% endif %}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
+<div class="auth-body">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1 class="auth-title">Verificación de Seguridad</h1>
+                <p class="auth-subtitle">Ingresa el código enviado a tu email</p>
             </div>
-        {% endif %}
+            
+            <div class="auth-content">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert-nuam {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
 
-        <form method="POST" class="auth-form">
-            {% csrf_token %}
-            <label for="code">Código de autenticación:</label>
-            <input type="text" id="code" name="code" placeholder="Ejemplo: 123456" required>
+                <div class="alert-nuam alert-info">
+                    <i class="bi bi-envelope-check"></i>
+                    <strong>Revisa tu correo electrónico</strong><br>
+                    Te enviamos un código de 6 dígitos a tu email registrado
+                </div>
 
-            <button type="submit" class="btn-primary">Verificar</button>
-        </form>
+                <form method="POST" class="auth-form">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="code" class="form-label">Código de 6 dígitos</label>
+                        <input type="text" 
+                               id="code" 
+                               name="code" 
+                               class="form-control form-control-lg text-center" 
+                               placeholder="123456" 
+                               maxlength="6"
+                               pattern="[0-9]{6}"
+                               required
+                               autofocus
+                               style="font-size: 1.5rem; letter-spacing: 0.5rem; font-weight: bold; max-width: 200px; margin: 0 auto;">
+                        <small class="form-text text-muted">
+                            El código expira en 10 minutos
+                        </small>
+                    </div>
 
-        <div class="extra-links">
-            <a href="{% url 'login' %}">Volver al inicio de sesión</a>
+                    <button type="submit" class="btn btn-nuam-primary btn-lg mt-3">
+                        <i class="bi bi-shield-check"></i> Verificar y Acceder
+                    </button>
+                </form>
+
+                <div class="auth-footer text-center mt-3">
+                    <a href="{% url 'calificaciones:login' %}" class="text-nuam-accent">
+                        <i class="bi bi-arrow-left"></i> Volver al login
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>

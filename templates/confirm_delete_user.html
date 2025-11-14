@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Eliminar Usuario - Admin NUAM{% endblock %}
+
+{% block content %}
+<div class="nuam-container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="bi bi-exclamation-triangle"></i> Confirmar Eliminación
+        </h1>
+        <p class="page-subtitle">Eliminar usuario del sistema</p>
+    </div>
+
+    <div class="nuam-card">
+        <div class="nuam-card-body text-center">
+            <div class="alert alert-warning">
+                <h4><i class="bi bi-exclamation-triangle-fill"></i> ¿Estás seguro?</h4>
+                <p>Estás a punto de eliminar al usuario: <strong>{{ usuario.username }}</strong></p>
+                <p><strong>Nombre:</strong> {{ usuario.first_name }} {{ usuario.last_name }}</p>
+                <p><strong>Email:</strong> {{ usuario.email }}</p>
+                <p><strong>Rol:</strong> {{ usuario.profile.get_rol_display }}</p>
+                
+                {% if usuario == request.user %}
+                <div class="alert alert-danger mt-3">
+                    <i class="bi bi-x-circle-fill"></i> No puedes eliminar tu propio usuario.
+                </div>
+                {% endif %}
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="mt-4">
+                    {% if usuario != request.user %}
+                    <button type="submit" class="btn btn-danger me-2">
+                        <i class="bi bi-trash"></i> Sí, Eliminar Usuario
+                    </button>
+                    {% endif %}
+                    <a href="{% url 'calificaciones:admin_users' %}" class="btn btn-nuam-outline">
+                        <i class="bi bi-arrow-left"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

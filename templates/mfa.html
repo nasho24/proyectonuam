@@ -1,25 +1,68 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Autenticación MFA - NUAM</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
-</head>
-<body class="auth-body">
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Configurar MFA - NUAM{% endblock %}
+
+{% block content %}
+<div class="auth-body">
   <div class="auth-container">
     <div class="auth-card">
       <div class="auth-header">
-        <h1 class="auth-title">Activar Autenticación MFA</h1>
-        <p class="auth-subtitle">Escanea este código QR en tu aplicación de autenticación</p>
+        <h1 class="auth-title">Configurar Autenticación MFA</h1>
+        <p class="auth-subtitle">Escanea el QR y verifica tu identidad</p>
       </div>
-      <div class="auth-content mfa-setup">
-        <img src="data:image/png;base64,{{ qr_base64 }}" alt="Código QR" class="qr-code">
-        <p>O usa este código manualmente:</p>
-        <div class="security-badge">{{ secret }}</div>
-        <a href="{% url 'verify_mfa' %}" class="btn-nuam-primary mt-3">Verificar Código</a>
+      <div class="auth-content mfa-setup text-center">
+        
+        <!-- Código QR -->
+        <div class="mb-4">
+          <img src="data:image/png;base64,{{ qr_base64 }}" alt="Código QR MFA" 
+               style="max-width: 250px; border: 2px solid #e9ecef; border-radius: 8px;">
+        </div>
+        
+        <p class="mb-4"><strong>Paso 1:</strong> Escanea el código QR con Google Authenticator, Authy o similar</p>
+
+        <!-- Mensajes de error/éxito -->
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert-nuam {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %} mb-3">
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <!-- Formulario de verificación -->
+        <div class="verification-form mt-4">
+          <p class="mb-3"><strong>Paso 2:</strong> Ingresa el código de 6 dígitos de tu app</p>
+          
+          <form method="POST" action="{% url 'calificaciones:verify_mfa' %}">
+            {% csrf_token %}
+            <div class="form-group">
+              <input type="text" 
+                     id="code" 
+                     name="code" 
+                     class="form-control form-control-lg text-center" 
+                     placeholder="123456" 
+                     maxlength="6"
+                     pattern="[0-9]{6}"
+                     required
+                     autofocus
+                     style="font-size: 1.5rem; letter-spacing: 0.5rem; font-weight: bold; max-width: 200px; margin: 0 auto;">
+              <small class="form-text text-muted">El código cambia cada 30 segundos</small>
+            </div>
+
+            <button type="submit" class="btn btn-nuam-primary btn-lg mt-3">
+              <i class="bi bi-shield-check"></i> Verificar Identidad
+            </button>
+          </form>
+        </div>
+
+        <div class="mt-3">
+          <a href="{% url 'calificaciones:dashboard' %}" class="btn btn-nuam-outline">
+            <i class="bi bi-clock"></i> Configurar después
+          </a>
+        </div>
       </div>
     </div>
   </div>
-</body>
-</html>
+</div>
+{% endblock %}

@@ -4,7 +4,11 @@ from . import views
 app_name = 'calificaciones'
 
 urlpatterns = [
-    #path('test-reset/<str:token>/', views.test_reset_view, name='test_reset'),
+    # admins urls
+    path('gestion-usuarios/', views.admin_users, name='admin_users'),
+    path('gestion-usuarios/crear/', views.admin_create_user, name='admin_create_user'),
+    path('gestion-usuarios/editar/<int:user_id>/', views.admin_edit_user, name='admin_edit_user'),
+    path('gestion-usuarios/eliminar/<int:user_id>/', views.admin_delete_user, name='admin_delete_user'),
     # === DASHBOARDS ===
     path('', views.home, name='home'),
     # === REDIRECCIÓN OPCIONAL ===
@@ -14,6 +18,7 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('register/', views.register_view, name='register'),
     path('forgot-password/', views.forgot_password_view, name='forgot_password'),
+    # === MFA ===
     path('mfa/', views.mfa_view, name='mfa'),
     path('verify-mfa/', views.verify_mfa_view, name='verify_mfa'),
     path('reset-password/<str:token>/', views.reset_password_view, name='reset_password'),

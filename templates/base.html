@@ -31,52 +31,64 @@
             <button class="navbar-toggler" id="navbarToggler">
                 <i class="bi bi-list"></i>
             </button>
-
+            
             <!-- Menú de Navegación -->
-            <div class="navbar-nav" id="navbarNav">
-                {% if user.is_authenticated %}
-                    <!-- Menú para usuarios autenticados -->
-                    <a class="nav-link" href="{% url 'calificaciones:home' %}">
-                        <i class="bi bi-speedometer2"></i>
-                        <span class="nav-link-text">Inicio</span>
-                    </a>
-                    <a class="nav-link" href="{% url 'calificaciones:mantenedor' %}">
-                        <i class="bi bi-list-check"></i>
-                        <span class="nav-link-text">Calificaciones Tributarias</span>
-                    </a>
-                    <a class="nav-link" href="{% url 'calificaciones:empresas' %}">
-                        <i class="bi bi-building"></i>
-                        <span class="nav-link-text">Tus Empresas</span>
-                    </a>
-                    <a class="nav-link" href="{% url 'calificaciones:carga_masiva' %}">
-                        <i class="bi bi-upload"></i>
-                        <span class="nav-link-text">Carga de Archivos</span>
-                    </a>
-                {% endif %}
-            </div>
+<div class="navbar-nav" id="navbarNav">
+    {% if user.is_authenticated %}
+        <!-- Menú para usuarios autenticados -->
+        <a class="nav-link" href="{% url 'calificaciones:home' %}">
+            <i class="bi bi-speedometer2"></i>
+            <span class="nav-link-text">Inicio</span>
+        </a>
+        <a class="nav-link" href="{% url 'calificaciones:mantenedor' %}">
+            <i class="bi bi-list-check"></i>
+            <span class="nav-link-text">Calificaciones Tributarias</span>
+        </a>
+        <a class="nav-link" href="{% url 'calificaciones:empresas' %}">
+            <i class="bi bi-building"></i>
+            <span class="nav-link-text">Tus Empresas</span>
+        </a>
+        <a class="nav-link" href="{% url 'calificaciones:carga_masiva' %}">
+            <i class="bi bi-upload"></i>
+            <span class="nav-link-text">Carga de Archivos</span>
+        </a>
+        
+        <!-- Enlace de Administración SOLO para admins - DENTRO del navbar -->
+        {% if user.profile.es_administrador %}
+        <a class="nav-link" href="{% url 'calificaciones:admin_users' %}">
+            <i class="bi bi-gear"></i>
+            <span class="nav-link-text">Administración</span>
+        </a>
+        {% endif %}
+    {% endif %}
+</div>
 
-            <!-- Usuario y Logout -->
-            {% if user.is_authenticated %}
-            <div class="nav-user">
-                <span class="navbar-text">
-                    <i class="bi bi-person-circle"></i>
-                    <span>{{ user.first_name }}</span>
-                </span>
-                <a class="nav-link" href="{% url 'calificaciones:logout' %}">
-                    <i class="bi bi-box-arrow-right"></i>
-                    <span class="nav-link-text">Salir</span>
-                </a>
-            </div>
-            {% else %}
-            <div class="nav-user">
-                <a class="nav-link" href="{% url 'calificaciones:login' %}">
-                    <i class="bi bi-box-arrow-in-right"></i>
-                    <span class="nav-link-text">Ingresar</span>
-                </a>
-            </div>
-            {% endif %}
-        </div>
-    </nav>
+<!-- Usuario y Logout - FUERA del navbar-nav -->
+{% if user.is_authenticated %}
+<div class="nav-user">
+    <span class="navbar-text">
+        <i class="bi bi-person-circle"></i>
+        <span>{{ user.first_name }}</span>
+        <span class="badge {% if user.profile.rol == 'ADMIN' %}bg-danger{% elif user.profile.rol == 'USER' %}bg-success{% else %}bg-secondary{% endif %} ms-1">
+            {{ user.profile.get_rol_display }}
+        </span>
+    </span>
+    
+    <a class="nav-link" href="{% url 'calificaciones:logout' %}">
+        <i class="bi bi-box-arrow-right"></i>
+        <span class="nav-link-text">Salir</span>
+    </a>
+</div>
+{% else %}
+<div class="nav-user">
+    <a class="nav-link" href="{% url 'calificaciones:login' %}">
+        <i class="bi bi-box-arrow-in-right"></i>
+        <span class="nav-link-text">Ingresar</span>
+    </a>
+</div>
+{% endif %}
+</div>
+</nav>
 
     <!-- Contenido Principal -->
     <main>
