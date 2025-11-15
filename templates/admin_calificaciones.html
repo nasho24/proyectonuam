@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestión de Calificaciones - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📊 Gestión de Calificaciones Tributarias</h2>
+        <a href="{% url 'calificaciones:admin_users' %}" class="btn btn-outline-primary">
+            ← Volver al Panel
+        </a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Ejercicio</label>
+                    <select name="ejercicio" class="form-select">
+                        <option value="">Todos los ejercicios</option>
+                        {% for ejercicio in ejercicios %}
+                        <option value="{{ ejercicio }}" {% if request.GET.ejercicio == ejercicio|stringformat:"s" %}selected{% endif %}>
+                            {{ ejercicio }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Usuario</label>
+                    <select name="usuario" class="form-select">
+                        <option value="">Todos los usuarios</option>
+                        {% for usuario in usuarios %}
+                        <option value="{{ usuario.id }}" {% if request.GET.usuario == usuario.id|stringformat:"s" %}selected{% endif %}>
+                            {{ usuario.username }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Mercado</label>
+                    <select name="mercado" class="form-select">
+                        <option value="">Todos los mercados</option>
+                        {% for mercado in mercados %}
+                        <option value="{{ mercado }}" {% if request.GET.mercado == mercado %}selected{% endif %}>
+                            {{ mercado }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">Filtrar</button>
+                    <a href="{% url 'calificaciones:admin_calificaciones' %}" class="btn btn-outline-secondary">Limpiar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de Calificaciones -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5>Lista de Calificaciones</h5>
+            <span class="badge bg-primary">{{ calificaciones.count }} registros</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Instrumento</th>
+                            <th>Empresa</th>
+                            <th>Usuario</th>
+                            <th>Ejercicio</th>
+                            <th>Mercado</th>
+                            <th>Fecha Pago</th>
+                            <th>Origen</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for calificacion in calificaciones %}
+                        <tr>
+                            <td>
+                                <strong>{{ calificacion.instrumento }}</strong>
+                                {% if calificacion.descripcion_dividendo %}
+                                <br><small class="text-muted">{{ calificacion.descripcion_dividendo|truncatewords:5 }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ calificacion.empresa.nombre }}</td>
+                            <td>
+                                <span class="badge bg-secondary">{{ calificacion.usuario.username }}</span>
+                            </td>
+                            <td>{{ calificacion.ejercicio }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ calificacion.mercado }}</span>
+                            </td>
+                            <td>{{ calificacion.fecha_pago|date:"d/m/Y" }}</td>
+                            <td>
+                                <span class="badge {% if calificacion.origen == 'CARGA_MASIVA' %}bg-success{% elif calificacion.origen == 'SISTEMA' %}bg-primary{% else %}bg-warning{% endif %}">
+                                    {{ calificacion.get_origen_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="#" class="btn btn-warning" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-danger" title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-info" title="Ver Factores">
+                                        <i class="bi bi-calculator"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                No hay calificaciones registradas.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

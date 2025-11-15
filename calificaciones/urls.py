@@ -9,6 +9,9 @@ urlpatterns = [
     path('gestion-usuarios/crear/', views.admin_create_user, name='admin_create_user'),
     path('gestion-usuarios/editar/<int:user_id>/', views.admin_edit_user, name='admin_edit_user'),
     path('gestion-usuarios/eliminar/<int:user_id>/', views.admin_delete_user, name='admin_delete_user'),
+    path('gestion-empresas/', views.admin_empresas, name='admin_empresas'),
+    path('gestion-calificaciones/', views.admin_calificaciones, name='admin_calificaciones'),
+    path('gestion-archivos/', views.admin_archivos_carga, name='admin_archivos'),
     # === DASHBOARDS ===
     path('', views.home, name='home'),
     # === REDIRECCIÓN OPCIONAL ===

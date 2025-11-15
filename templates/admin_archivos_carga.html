@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}Archivos de Carga - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📁 Archivos de Carga Masiva</h2>
+        <a href="{% url 'calificaciones:admin_users' %}" class="btn btn-outline-primary">
+            ← Volver al Panel
+        </a>
+    </div>
+
+    <!-- Resumen -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h4>{{ total_archivos }}</h4>
+                    <p>Total Archivos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h4>{{ completados }}</h4>
+                    <p>Completados</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h4>{{ pendientes }}</h4>
+                    <p>Pendientes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h4>{{ con_errores }}</h4>
+                    <p>Con Errores</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Archivos -->
+    <div class="card">
+        <div class="card-header">
+            <h5>Historial de Archivos Cargados</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Archivo</th>
+                            <th>Empresa</th>
+                            <th>Usuario</th>
+                            <th>Tipo</th>
+                            <th>Fecha Carga</th>
+                            <th>Estado</th>
+                            <th>Registros</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for archivo in archivos %}
+                        <tr>
+                            <td>
+                                <strong>{{ archivo.nombre_archivo }}</strong>
+                            </td>
+                            <td>{{ archivo.empresa.nombre }}</td>
+                            <td>
+                                <span class="badge bg-primary">
+                                    {{ archivo.empresa.usuario.username }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {% if archivo.tipo_carga == 'MONTOS' %}bg-info{% else %}bg-success{% endif %}">
+                                    {{ archivo.get_tipo_carga_display }}
+                                </span>
+                            </td>
+                            <td>{{ archivo.fecha_carga|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                {% if archivo.estado == 'COMPLETADO' %}
+                                <span class="badge bg-success">{{ archivo.estado }}</span>
+                                {% elif archivo.estado == 'PROCESANDO' %}
+                                <span class="badge bg-warning">{{ archivo.estado }}</span>
+                                {% elif archivo.estado == 'ERROR' %}
+                                <span class="badge bg-danger">{{ archivo.estado }}</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ archivo.estado }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>
+                                    ✅ {{ archivo.registros_procesados }} 
+                                    {% if archivo.registros_error > 0 %}
+                                    / ❌ {{ archivo.registros_error }}
+                                    {% endif %}
+                                </small>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="#" class="btn btn-info" title="Ver Detalles">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-warning" title="Reprocesar">
+                                        <i class="bi bi-arrow-repeat"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-danger" title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                No hay archivos de carga registrados.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

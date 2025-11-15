@@ -1,86 +1,177 @@
 {% extends 'base.html' %}
-{% load static %}
 
-{% block title %}Gestión de Usuarios - Admin NUAM{% endblock %}
+{% block title %}Panel de Administración{% endblock %}
 
 {% block content %}
-<div class="nuam-container">
-    <div class="page-header">
-        <h1 class="page-title">
-            <i class="bi bi-people-fill"></i> Gestión de Usuarios
-        </h1>
-        <p class="page-subtitle">Administrar permisos y roles del sistema</p>
+<div class="container-fluid">
+    <h2>Panel de Administración - NUAM</h2>
+    
+    <!-- TARJETAS DE RESUMEN -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5>Usuarios</h5>
+                    <h3>{{ total_usuarios }}</h3>
+                    <p>Total registrados</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5>Empresas</h5>
+                    <h3>{{ total_empresas }}</h3>
+                    <p>En el sistema</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h5>Calificaciones</h5>
+                    <h3>{{ total_calificaciones }}</h3>
+                    <p>Registradas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5>Archivos</h5>
+                    <h3>{{ total_archivos }}</h3>
+                    <p>Cargados</p>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Botón Crear Usuario -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4>Lista de Usuarios</h4>
-        <a href="{% url 'calificaciones:admin_create_user' %}" class="btn btn-nuam-primary">
-            <i class="bi bi-person-plus"></i> Crear Nuevo Usuario
-        </a>
+ <!-- BOTONES DE GESTIÓN -->
+<div class="row">
+    <!-- SOLO ESTAS 3 TARJETAS -->
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5>🏢 Gestión de Empresas</h5>
+                <p>Ver todas las empresas</p>
+                <a href="{% url 'calificaciones:admin_empresas' %}" class="btn btn-success">
+                    Gestionar Empresas
+                </a>
+            </div>
+        </div>
     </div>
-
-    <!-- Tabla de Usuarios -->
-    <div class="nuam-card">
-        <div class="nuam-card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Usuario</th>
-                            <th>Nombre</th>
-                            <th>Email</th>
-                            <th>Rol</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for usuario in usuarios %}
-                        <tr>
-                            <td>
-                                <strong>{{ usuario.username }}</strong>
-                                {% if usuario == request.user %}
-                                <span class="badge bg-primary ms-1">Tú</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ usuario.first_name }} {{ usuario.last_name }}</td>
-                            <td>{{ usuario.email }}</td>
-                            <td>
-                                <span class="badge {% if usuario.profile.rol == 'ADMIN' %}bg-danger{% elif usuario.profile.rol == 'USER' %}bg-success{% else %}bg-secondary{% endif %}">
-                                    {{ usuario.profile.get_rol_display }}
-                                </span>
-                            </td>
-                            <td>
-                                <span class="badge {% if usuario.is_active %}bg-success{% else %}bg-danger{% endif %}">
-                                    {{ usuario.is_active|yesno:"Activo,Inactivo" }}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="btn-group btn-group-sm">
-                                    <a href="{% url 'calificaciones:admin_edit_user' usuario.id %}" class="btn btn-outline-primary">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    {% if usuario != request.user %}
-                                    <a href="{% url 'calificaciones:admin_delete_user' usuario.id %}" class="btn btn-outline-danger">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                    {% endif %}
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center text-muted py-4">
-                                <i class="bi bi-people display-4"></i>
-                                <p class="mt-2">No hay usuarios registrados</p>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5>📊 Gestión de Calificaciones</h5>
+                <p>Ver todas las calificaciones</p>
+                <a href="{% url 'calificaciones:admin_calificaciones' %}" class="btn btn-warning">
+                    Gestionar Calificaciones
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5>📁 Archivos de Carga</h5>
+                <p>Ver archivos cargados</p>
+                <a href="{% url 'calificaciones:admin_archivos' %}" class="btn btn-info">
+                    Ver Archivos
+                </a>
             </div>
         </div>
     </div>
 </div>
+
+    <!-- TABLA DE USUARIOS -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Lista de Usuarios</h5>
+                    <a href="{% url 'calificaciones:admin_create_user' %}" class="btn btn-success btn-sm">
+                        <i class="bi bi-person-plus"></i> Crear Usuario
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Email</th>
+                                    <th>Nombre</th>
+                                    <th>Rol</th>
+                                    <th>Estado</th>
+                                    <th>Fecha Registro</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for usuario in usuarios %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ usuario.username }}</strong>
+                                        {% if usuario.is_superuser %}
+                                        <span class="badge bg-danger">Super Admin</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ usuario.email }}</td>
+                                    <td>{{ usuario.first_name }} {{ usuario.last_name }}</td>
+                                    <td>
+                                        {% if usuario.profile %}
+                                            <span class="badge 
+                                                {% if usuario.profile.rol == 'ADMIN' %}bg-primary
+                                                {% elif usuario.profile.rol == 'USER' %}bg-success
+                                                {% else %}bg-secondary{% endif %}">
+                                                {{ usuario.profile.get_rol_display }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Sin perfil</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if usuario.is_active %}
+                                            <span class="badge bg-success">Activo</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactivo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ usuario.date_joined|date:"d/m/Y" }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'calificaciones:admin_edit_user' usuario.id %}" 
+                                               class="btn btn-warning" title="Editar">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            {% if not usuario.is_superuser %}
+                                            <a href="{% url 'calificaciones:admin_delete_user' usuario.id %}" 
+                                               class="btn btn-danger" title="Eliminar">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                            {% else %}
+                                            <button class="btn btn-outline-secondary" disabled title="No se puede eliminar super admin">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        No hay usuarios registrados en el sistema.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

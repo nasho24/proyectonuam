@@ -1,17 +1,17 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib import messages 
-from .models import Empresa, CalificacionTributaria, Profile, PasswordResetToken
+from .models import Empresa, CalificacionTributaria, Profile, PasswordResetToken, ArchivoCarga
 from .forms import EmpresaForm, UserCreateForm, UserManagementForm
 import csv
 from datetime import datetime, timedelta
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import get_user_model, login, authenticate, logout
+from django.contrib.auth.models import User  
 import pyotp
 import qrcode
 import base64
 from io import BytesIO
-from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.utils import timezone
 import random
@@ -89,8 +89,14 @@ def es_administrador(user):
 @user_passes_test(es_administrador)
 def admin_users(request):
     """Vista principal de administración de usuarios"""
+    # USAR get_user_model() en lugar de User directamente
+    User = get_user_model()  # ✅ Esto obtiene el modelo User correcto
     usuarios = User.objects.all().select_related('profile')
     
+    # AGREGAR ESTOS TOTALES PARA EL DASHBOARD
+    total_empresas = Empresa.objects.count()
+    total_calificaciones = CalificacionTributaria.objects.count()
+    total_archivos = ArchivoCarga.objects.count()
     
     context = {
         'usuarios': usuarios,
@@ -98,6 +104,10 @@ def admin_users(request):
         'admins': usuarios.filter(profile__rol='ADMIN').count(),
         'usuarios_normales': usuarios.filter(profile__rol='USER').count(),
         'viewers': usuarios.filter(profile__rol='VIEWER').count(),
+        # NUEVOS TOTALES PARA EL DASHBOARD
+        'total_empresas': total_empresas,
+        'total_calificaciones': total_calificaciones,
+        'total_archivos': total_archivos,
     }
     return render(request, 'users_management.html', context)
 
@@ -166,6 +176,65 @@ def admin_delete_user(request, user_id):
 def test_reset_view(request, token):
     """Vista temporal para probar que la URL funciona"""
     return HttpResponse(f"¡La URL funciona! Token recibido: {token}")
+
+@login_required
+@user_passes_test(es_administrador)
+def admin_empresas(request):
+    """Vista para que admin vea TODAS las empresas"""
+    empresas = Empresa.objects.all().select_related('usuario')
+    
+    context = {
+        'empresas': empresas,
+        'total_empresas': empresas.count(),
+        'empresas_activas': empresas.count(),  # Puedes ajustar esta lógica
+        'usuarios_empresas': User.objects.filter(empresa__isnull=False).distinct().count(),
+    }
+    return render(request, 'admin_empresas.html', context)
+
+@login_required
+@user_passes_test(es_administrador)
+def admin_archivos_carga(request):
+    """Vista para que admin vea TODOS los archivos de carga"""
+    archivos = ArchivoCarga.objects.all().select_related('empresa__usuario').order_by('-fecha_carga')
+    
+    context = {
+        'archivos': archivos,
+        'total_archivos': archivos.count(),
+        'completados': archivos.filter(estado='COMPLETADO').count(),
+        'pendientes': archivos.filter(estado='PENDIENTE').count(),
+        'con_errores': archivos.filter(estado='ERROR').count(),
+    }
+    return render(request, 'admin_archivos_carga.html', context)
+
+@login_required
+@user_passes_test(es_administrador)
+def admin_calificaciones(request):
+    """Vista para que admin vea TODAS las calificaciones"""
+    calificaciones = CalificacionTributaria.objects.all().select_related('usuario', 'empresa')
+    
+    # Filtros
+    ejercicio = request.GET.get('ejercicio')
+    usuario_id = request.GET.get('usuario')
+    mercado = request.GET.get('mercado')
+    
+    if ejercicio:
+        calificaciones = calificaciones.filter(ejercicio=ejercicio)
+    if usuario_id:
+        calificaciones = calificaciones.filter(usuario_id=usuario_id)
+    if mercado:
+        calificaciones = calificaciones.filter(mercado__icontains=mercado)
+    
+    # Obtener valores únicos para los filtros
+    ejercicios = CalificacionTributaria.objects.values_list('ejercicio', flat=True).distinct().order_by('-ejercicio')
+    mercados = CalificacionTributaria.objects.values_list('mercado', flat=True).distinct()
+    
+    context = {
+        'calificaciones': calificaciones,
+        'usuarios': User.objects.all(),
+        'ejercicios': ejercicios,
+        'mercados': mercados,
+    }
+    return render(request, 'admin_calificaciones.html', context)
 
 @login_required
 def mfa_view(request):

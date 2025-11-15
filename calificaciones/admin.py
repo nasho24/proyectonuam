@@ -1,47 +1,18 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import User
 from django.utils.html import format_html
-from .models import Empresa, CalificacionTributaria, FactoresCalificacion, ArchivoCarga
+from .models import Empresa, CalificacionTributaria, FactoresCalificacion, ArchivoCarga, Profile, PasswordResetToken
 
 # ==========================================
 # CONFIGURACIÓN ADMINISTRATIVA PROFESIONAL
 # ==========================================
 
-# Personalizar el título del admin
 admin.site.site_header = "NUAM Capital - Sistema de Gestión Tributaria"
 admin.site.site_title = "Panel de Administración NUAM"
 admin.site.index_title = "Administración del Sistema"
-
-# Remover el modelo Group del admin (opcional)
 admin.site.unregister(Group)
-
-# ==========================================
-# FILTROS PERSONALIZADOS
-# ==========================================
-
-class EjercicioFilter(admin.SimpleListFilter):
-    title = 'Ejercicio Fiscal'
-    parameter_name = 'ejercicio'
-    
-    def lookups(self, request, model_admin):
-        ejercicios = CalificacionTributaria.objects.values_list('ejercicio', flat=True).distinct()
-        return [(ej, f"{ej}") for ej in sorted(ejercicios)]
-    
-    def queryset(self, request, queryset):
-        if self.value():
-            return queryset.filter(ejercicio=self.value())
-
-class MercadoFilter(admin.SimpleListFilter):
-    title = 'Mercado'
-    parameter_name = 'mercado'
-    
-    def lookups(self, request, model_admin):
-        mercados = CalificacionTributaria.objects.values_list('mercado', flat=True).distinct()
-        return [(m, m) for m in sorted(mercados) if m]
-    
-    def queryset(self, request, queryset):
-        if self.value():
-            return queryset.filter(mercado=self.value())
 
 # ==========================================
 # INLINES PARA RELACIONES
@@ -51,7 +22,7 @@ class FactoresCalificacionInline(admin.TabularInline):
     model = FactoresCalificacion
     extra = 0
     can_delete = False
-    readonly_fields = ['validar_factores_display']  # CORREGIDO
+    readonly_fields = ['validar_factores_display']
     
     fields = ['validar_factores_display', 'factor_8', 'factor_9', 'factor_10']
     
@@ -63,7 +34,31 @@ class FactoresCalificacionInline(admin.TabularInline):
     validar_factores_display.short_description = 'Validación'
 
 # ==========================================
-# MODELADMIN PARA EMPRESAS
+# INLINE PARA PERFILES DE USUARIO
+# ==========================================
+
+class ProfileInline(admin.StackedInline):
+    model = Profile
+    can_delete = False
+    verbose_name_plural = 'Perfil'
+    fk_name = 'user'
+
+# ==========================================
+# USER ADMIN PERSONALIZADO
+# ==========================================
+
+class CustomUserAdmin(UserAdmin):
+    inlines = (ProfileInline,)
+    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'get_rol', 'date_joined')
+    list_filter = ('is_staff', 'is_superuser', 'is_active', 'profile__rol')
+    search_fields = ('username', 'email', 'first_name', 'last_name')
+    
+    def get_rol(self, obj):
+        return obj.profile.rol if hasattr(obj, 'profile') else 'Sin perfil'
+    get_rol.short_description = 'Rol'
+
+# ==========================================
+# MODELADMIN PARA EMPRESAS (MODIFICADO)
 # ==========================================
 
 @admin.register(Empresa)
@@ -71,19 +66,24 @@ class EmpresaAdmin(admin.ModelAdmin):
     list_display = [
         'rut_formateado', 
         'nombre', 
+        'usuario',
         'giro', 
         'telefono', 
         'email'
     ]
     
-    list_filter = ['giro']
-    search_fields = ['nombre', 'rut', 'giro', 'email']
-    readonly_fields = ['fecha_creacion_display']  # CORREGIDO
+    list_filter = ['giro', 'usuario']
+    search_fields = ['nombre', 'rut', 'giro', 'email', 'usuario__username']
+    readonly_fields = ['fecha_creacion_display']
     list_per_page = 20
+    
+    # ✅ MOSTRAR TODAS LAS EMPRESAS DE TODOS LOS USUARIOS
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('usuario')
     
     fieldsets = (
         ('Información Fiscal', {
-            'fields': ('rut', 'nombre', 'giro')
+            'fields': ('rut', 'nombre', 'giro', 'usuario')
         }),
         ('Información de Contacto', {
             'fields': ('direccion', 'telefono', 'email')
@@ -93,14 +93,13 @@ class EmpresaAdmin(admin.ModelAdmin):
     def rut_formateado(self, obj):
         return format_html('<strong>{}</strong>', obj.rut)
     rut_formateado.short_description = 'RUT'
-    rut_formateado.admin_order_field = 'rut'
     
     def fecha_creacion_display(self, obj):
         return f"ID: {obj.id}"
     fecha_creacion_display.short_description = 'ID Registro'
 
 # ==========================================
-# MODELADMIN PARA CALIFICACIONES TRIBUTARIAS
+# MODELADMIN PARA CALIFICACIONES TRIBUTARIAS (MODIFICADO)
 # ==========================================
 
 @admin.register(CalificacionTributaria)
@@ -108,6 +107,7 @@ class CalificacionTributariaAdmin(admin.ModelAdmin):
     list_display = [
         'instrumento',
         'empresa_link',
+        'usuario',
         'ejercicio',
         'mercado',
         'fecha_pago',
@@ -115,18 +115,23 @@ class CalificacionTributariaAdmin(admin.ModelAdmin):
         'acogido_isfut_badge'
     ]
     
-    list_filter = [EjercicioFilter, MercadoFilter, 'origen', 'acogido_isfut']
-    search_fields = ['instrumento', 'empresa__nombre', 'descripcion_dividendo']
-    readonly_fields = ['fecha_creacion_display']  # CORREGIDO
+    list_filter = ['ejercicio', 'mercado', 'origen', 'acogido_isfut', 'usuario']
+    search_fields = ['instrumento', 'empresa__nombre', 'descripcion_dividendo', 'usuario__username']
+    readonly_fields = ['fecha_creacion_display']
     list_per_page = 25
     date_hierarchy = 'fecha_pago'
     
     inlines = [FactoresCalificacionInline]
     
+    # ✅ MOSTRAR TODAS LAS CALIFICACIONES DE TODOS LOS USUARIOS
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('usuario', 'empresa')
+    
     fieldsets = (
         ('Información Básica', {
             'fields': (
                 'empresa', 
+                'usuario',
                 'ejercicio', 
                 'mercado', 
                 'instrumento'
@@ -156,7 +161,6 @@ class CalificacionTributariaAdmin(admin.ModelAdmin):
             obj.empresa.nombre
         )
     empresa_link.short_description = 'Empresa'
-    empresa_link.admin_order_field = 'empresa__nombre'
     
     def origen_badge(self, obj):
         color = {
@@ -174,12 +178,8 @@ class CalificacionTributariaAdmin(admin.ModelAdmin):
     
     def acogido_isfut_badge(self, obj):
         if obj.acogido_isfut:
-            return format_html(
-                '<span style="background-color: green; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px;">✅ ISFUT</span>'
-            )
-        return format_html(
-            '<span style="background-color: gray; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px;">❌ Sin ISFUT</span>'
-        )
+            return format_html('<span style="color: green;">✅ ISFUT</span>')
+        return format_html('<span style="color: gray;">❌ Sin ISFUT</span>')
     acogido_isfut_badge.short_description = 'ISFUT'
     
     def fecha_creacion_display(self, obj):
@@ -201,10 +201,14 @@ class FactoresCalificacionAdmin(admin.ModelAdmin):
         'validacion_badge'
     ]
     
-    list_filter = ['calificacion__ejercicio', 'calificacion__mercado']
-    search_fields = ['calificacion__instrumento', 'calificacion__empresa__nombre']
-    readonly_fields = ['suma_factores_8_16']  # CORREGIDO
+    list_filter = ['calificacion__ejercicio', 'calificacion__mercado', 'calificacion__usuario']
+    search_fields = ['calificacion__instrumento', 'calificacion__empresa__nombre', 'calificacion__usuario__username']
+    readonly_fields = ['suma_factores_8_16']
     list_per_page = 20
+    
+    # ✅ MOSTRAR TODOS LOS FACTORES DE TODOS LOS USUARIOS
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('calificacion__usuario', 'calificacion__empresa')
     
     fieldsets = (
         ('Relación', {
@@ -238,7 +242,6 @@ class FactoresCalificacionAdmin(admin.ModelAdmin):
             f"{obj.calificacion.instrumento} - {obj.calificacion.ejercicio}"
         )
     calificacion_link.short_description = 'Calificación'
-    calificacion_link.admin_order_field = 'calificacion__instrumento'
     
     def suma_factores_8_16(self, obj):
         return obj.validar_factores()
@@ -251,7 +254,7 @@ class FactoresCalificacionAdmin(admin.ModelAdmin):
     validacion_badge.short_description = 'Validación'
 
 # ==========================================
-# MODELADMIN PARA ARCHIVOS DE CARGA
+# MODELADMIN PARA ARCHIVOS DE CARGA (MODIFICADO)
 # ==========================================
 
 @admin.register(ArchivoCarga)
@@ -259,6 +262,7 @@ class ArchivoCargaAdmin(admin.ModelAdmin):
     list_display = [
         'nombre_archivo',
         'empresa_link',
+        'usuario',
         'tipo_carga_badge',
         'fecha_carga',
         'estado_badge',
@@ -266,11 +270,15 @@ class ArchivoCargaAdmin(admin.ModelAdmin):
         'registros_error'
     ]
     
-    list_filter = ['tipo_carga', 'estado', 'fecha_carga']
-    search_fields = ['nombre_archivo', 'empresa__nombre']
+    list_filter = ['tipo_carga', 'estado', 'fecha_carga', 'empresa__usuario']
+    search_fields = ['nombre_archivo', 'empresa__nombre', 'empresa__usuario__username']
     readonly_fields = ['fecha_carga', 'registros_procesados', 'registros_error']
     list_per_page = 15
     date_hierarchy = 'fecha_carga'
+    
+    # ✅ MOSTRAR TODOS LOS ARCHIVOS DE TODOS LOS USUARIOS
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('empresa__usuario')
     
     def empresa_link(self, obj):
         return format_html(
@@ -279,6 +287,10 @@ class ArchivoCargaAdmin(admin.ModelAdmin):
             obj.empresa.nombre
         )
     empresa_link.short_description = 'Empresa'
+    
+    def usuario(self, obj):
+        return obj.empresa.usuario if obj.empresa.usuario else 'Sin usuario'
+    usuario.short_description = 'Usuario'
     
     def tipo_carga_badge(self, obj):
         color = 'blue' if obj.tipo_carga == 'MONTOS' else 'green'
@@ -304,6 +316,29 @@ class ArchivoCargaAdmin(admin.ModelAdmin):
     estado_badge.short_description = 'Estado'
 
 # ==========================================
+# ADMIN PARA TOKENS DE PASSWORD RESET
+# ==========================================
+
+@admin.register(PasswordResetToken)
+class PasswordResetTokenAdmin(admin.ModelAdmin):
+    list_display = ['user', 'token', 'created_at', 'expires_at', 'used', 'is_valid']
+    list_filter = ['used', 'created_at']
+    search_fields = ['user__username', 'user__email', 'token']
+    readonly_fields = ['created_at', 'expires_at']
+    
+    def is_valid(self, obj):
+        return obj.is_valid()
+    is_valid.boolean = True
+    is_valid.short_description = 'Válido'
+
+# ==========================================
+# REGISTRAR USER ADMIN PERSONALIZADO
+# ==========================================
+
+admin.site.unregister(User)
+admin.site.register(User, CustomUserAdmin)
+
+# ==========================================
 # ACCIONES PERSONALIZADAS
 # ==========================================
 
@@ -311,13 +346,4 @@ def marcar_como_procesado(modeladmin, request, queryset):
     queryset.update(estado='COMPLETADO')
 marcar_como_procesado.short_description = "📋 Marcar como procesado"
 
-def recalcular_factores(modeladmin, request, queryset):
-    for calificacion in queryset:
-        # Aquí iría la lógica de recálculo
-        pass
-    modeladmin.message_user(request, "Factores recalculados exitosamente")
-recalcular_factores.short_description = "🔄 Recalcular factores"
-
-# Agregar acciones a los modelos
 ArchivoCargaAdmin.actions = [marcar_como_procesado]
-CalificacionTributariaAdmin.actions = [recalcular_factores]
